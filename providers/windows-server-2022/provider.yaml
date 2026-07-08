@@ -1,0 +1,26 @@
+name: windows-server-2022
+display_name: "Windows Server 2022"
+family: windows
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: true
+answer_file:
+  format: autounattend.xml
+  template: templates/autounattend.xml.tmpl
+detection:
+  volume_id_patterns: ["SSS_X64FRE*", "SERVER_EVAL_X64FRE*"]
+  files: ["sources/install.wim", "sources/boot.wim"]
+boot:
+  pxe:
+    kernel: wimboot
+    requires: [winpe]
+  http_boot:
+    kernel: wimboot
+    requires: [winpe]
+notes: >
+  Edition/image index selection (Standard/Datacenter, Core/Desktop) is a
+  profile option mapped to the install.wim image index.

@@ -1,0 +1,20 @@
+# HELBOOT dietpi.txt template (DietPi first-boot automation). Rendered
+# per host from the profile configuration and placed next to the image.
+
+AUTO_SETUP_AUTOMATED=1
+AUTO_SETUP_LOCALE={{ .Locale }}
+AUTO_SETUP_KEYBOARD_LAYOUT={{ .Keyboard }}
+AUTO_SETUP_TIMEZONE={{ .Timezone }}
+
+AUTO_SETUP_NET_HOSTNAME={{ .Hostname }}
+AUTO_SETUP_NET_ETHERNET_ENABLED=1
+AUTO_SETUP_NET_USESTATIC=0
+
+AUTO_SETUP_GLOBAL_PASSWORD={{ .Password }}
+AUTO_SETUP_SSH_SERVER_INDEX=-1
+
+{{- if .SoftwareIDs }}
+AUTO_SETUP_INSTALL_SOFTWARE_ID={{ .SoftwareIDs }}
+{{- end }}
+
+SURVEY_OPTED_IN=0

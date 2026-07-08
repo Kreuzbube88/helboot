@@ -1,0 +1,22 @@
+name: haos
+display_name: "Home Assistant OS"
+family: appliance
+capabilities:
+  iso: false
+  image: true
+  unattended_install: false
+  pxe: false
+  http_boot: false
+  usb_boot: false
+  secure_boot: false
+answer_file:
+  format: none
+detection:
+  files: ["boot/cmdline.txt"]
+notes: >
+  Home Assistant OS is distributed as ready-made disk images per platform
+  (x86-64, Raspberry Pi, ODROID, ...), not as an installer ISO, and boots
+  straight into HAOS. There is no unattended installer to drive; HELBOOT
+  v1 registers the image type and documents the limitation. Direct
+  image-to-disk deployment is a follow-up alongside DietPi
+  (image-write capability).

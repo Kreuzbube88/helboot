@@ -1,0 +1,33 @@
+# HELBOOT kickstart template (Fedora, Anaconda). Rendered per host from
+# the profile configuration.
+
+text
+lang {{ .Locale }}
+keyboard {{ .Keyboard }}
+timezone {{ .Timezone }} --utc
+
+network --bootproto=dhcp --hostname={{ .Hostname }} --activate
+
+rootpw --lock
+user --name={{ .Username }} --password={{ .PasswordHash }} --iscrypted --groups=wheel
+
+zerombr
+clearpart --all --initlabel
+autopart --type={{ .PartitionType }}
+
+bootloader --location=mbr
+
+%packages
+@core
+{{- range .Packages }}
+{{ . }}
+{{- end }}
+%end
+
+{{- if .PostScript }}
+%post
+{{ .PostScript }}
+%end
+{{- end }}
+
+reboot

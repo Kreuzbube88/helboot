@@ -1,0 +1,41 @@
+# HELBOOT preseed template (Debian). Rendered per host from the profile
+# configuration.
+
+d-i debian-installer/locale string {{ .Locale }}
+d-i keyboard-configuration/xkb-keymap select {{ .Keyboard }}
+
+d-i netcfg/choose_interface select auto
+d-i netcfg/get_hostname string {{ .Hostname }}
+d-i netcfg/get_domain string {{ .Domain }}
+
+d-i mirror/country string manual
+d-i mirror/http/hostname string {{ .MirrorHost }}
+d-i mirror/http/directory string {{ .MirrorPath }}
+
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string {{ .Username }}
+d-i passwd/username string {{ .Username }}
+d-i passwd/user-password-crypted password {{ .PasswordHash }}
+
+d-i clock-setup/utc boolean true
+d-i time/zone string {{ .Timezone }}
+
+d-i partman-auto/method string {{ .PartitionMethod }}
+d-i partman-auto/choose_recipe select atomic
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+tasksel tasksel/first multiselect standard, ssh-server
+d-i pkgsel/include string {{ .Packages }}
+d-i pkgsel/upgrade select safe-upgrade
+
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/bootdev string default
+
+{{- if .LateCommand }}
+d-i preseed/late_command string {{ .LateCommand }}
+{{- end }}
+
+d-i finish-install/reboot_in_progress note

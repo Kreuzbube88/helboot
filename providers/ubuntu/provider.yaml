@@ -1,0 +1,29 @@
+name: ubuntu
+display_name: "Ubuntu"
+family: debian
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: true
+answer_file:
+  format: autoinstall.yaml
+  template: templates/autoinstall.yaml.tmpl
+detection:
+  volume_id_patterns: ["Ubuntu*", "Ubuntu-Server*"]
+  files: [".disk/info", "casper"]
+boot:
+  pxe:
+    kernel: casper/vmlinuz
+    initrd: [casper/initrd]
+    cmdline: "ip=dhcp url={{ .ISOURL }} autoinstall ds=nocloud-net;s={{ .CloudInitURL }}"
+  http_boot:
+    kernel: casper/vmlinuz
+    initrd: [casper/initrd]
+    cmdline: "ip=dhcp url={{ .ISOURL }} autoinstall ds=nocloud-net;s={{ .CloudInitURL }}"
+notes: >
+  Uses subiquity autoinstall with a cloud-init NoCloud datasource served
+  by HELBOOT (user-data/meta-data). The live installer fetches the whole
+  ISO over HTTP, so PXE installs need ~2 GB of RAM on the target.

@@ -1,0 +1,29 @@
+name: fedora
+display_name: "Fedora"
+family: rhel
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: true
+answer_file:
+  format: kickstart
+  template: templates/kickstart.ks.tmpl
+detection:
+  volume_id_patterns: ["Fedora-*"]
+  files: [".discinfo", "images/pxeboot/vmlinuz"]
+boot:
+  pxe:
+    kernel: images/pxeboot/vmlinuz
+    initrd: [images/pxeboot/initrd.img]
+    cmdline: "inst.repo={{ .ISOURL }} inst.ks={{ .AnswerFileURL }}"
+  http_boot:
+    kernel: images/pxeboot/vmlinuz
+    initrd: [images/pxeboot/initrd.img]
+    cmdline: "inst.repo={{ .ISOURL }} inst.ks={{ .AnswerFileURL }}"
+notes: >
+  Anaconda kickstart installation; Server and Everything ISOs work best
+  for network installs. Workstation Live ISOs have limited kickstart
+  support and are flagged during ISO analysis.

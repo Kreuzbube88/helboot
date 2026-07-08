@@ -1,0 +1,17 @@
+# HELBOOT answer file template (Proxmox VE automated installation,
+# PVE >= 8.2). Rendered per host from the profile configuration.
+
+[global]
+keyboard = "{{ .Keyboard }}"
+country = "{{ .Country }}"
+fqdn = "{{ .Hostname }}.{{ .Domain }}"
+mailto = "{{ .Email }}"
+timezone = "{{ .Timezone }}"
+root-password = "{{ .Password }}"
+
+[network]
+source = "from-dhcp"
+
+[disk-setup]
+filesystem = "{{ .Filesystem }}"
+disk-list = ["{{ .Disk }}"]

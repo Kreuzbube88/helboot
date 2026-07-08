@@ -1,0 +1,29 @@
+name: opensuse
+display_name: "openSUSE"
+family: suse
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: true
+answer_file:
+  format: autoyast
+  template: templates/autoyast.xml.tmpl
+detection:
+  volume_id_patterns: ["openSUSE*"]
+  files: ["boot/x86_64/loader/linux"]
+boot:
+  pxe:
+    kernel: boot/x86_64/loader/linux
+    initrd: [boot/x86_64/loader/initrd]
+    cmdline: "install={{ .ISOURL }} autoyast={{ .AnswerFileURL }}"
+  http_boot:
+    kernel: boot/x86_64/loader/linux
+    initrd: [boot/x86_64/loader/initrd]
+    cmdline: "install={{ .ISOURL }} autoyast={{ .AnswerFileURL }}"
+notes: >
+  AutoYaST-based installation for Leap and Tumbleweed DVD ISOs. Agama
+  (the new installer) support will be added as its unattended interface
+  stabilizes.

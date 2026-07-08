@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!-- HELBOOT AutoYaST template (openSUSE). Rendered per host from the
+     profile configuration. -->
+<!DOCTYPE profile>
+<profile xmlns="http://www.suse.com/1.0/yast2ns"
+         xmlns:config="http://www.suse.com/1.0/configns">
+  <general>
+    <mode>
+      <confirm config:type="boolean">false</confirm>
+    </mode>
+  </general>
+  <language>
+    <language>{{ .Locale }}</language>
+  </language>
+  <keyboard>
+    <keymap>{{ .Keyboard }}</keymap>
+  </keyboard>
+  <timezone>
+    <timezone>{{ .Timezone }}</timezone>
+    <hwclock>UTC</hwclock>
+  </timezone>
+  <networking>
+    <dns>
+      <hostname>{{ .Hostname }}</hostname>
+    </dns>
+    <interfaces config:type="list">
+      <interface>
+        <bootproto>dhcp</bootproto>
+        <device>eth0</device>
+        <startmode>auto</startmode>
+      </interface>
+    </interfaces>
+  </networking>
+  <users config:type="list">
+    <user>
+      <username>{{ .Username }}</username>
+      <user_password>{{ .PasswordHash }}</user_password>
+      <encrypted config:type="boolean">true</encrypted>
+    </user>
+  </users>
+  <software>
+    <patterns config:type="list">
+      <pattern>base</pattern>
+    </patterns>
+    <packages config:type="list">
+{{- range .Packages }}
+      <package>{{ . }}</package>
+{{- end }}
+    </packages>
+  </software>
+</profile>

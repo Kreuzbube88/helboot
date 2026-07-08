@@ -1,0 +1,28 @@
+name: windows10
+display_name: "Windows 10"
+family: windows
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: true
+answer_file:
+  format: autounattend.xml
+  template: templates/autounattend.xml.tmpl
+detection:
+  volume_id_patterns: ["CCCOMA_X64FRE*", "CCSA_X64FRE*", "J_CCSA_X86FRE*"]
+  files: ["sources/install.wim", "sources/boot.wim"]
+boot:
+  pxe:
+    kernel: wimboot
+    requires: [winpe]
+  http_boot:
+    kernel: wimboot
+    requires: [winpe]
+notes: >
+  Network installation boots WinPE (from the ISO's boot.wim) via wimboot,
+  then runs setup.exe against the HELBOOT-served installation source with
+  a generated autounattend.xml. Windows 10 reaches end of support in
+  October 2025; the provider remains for existing labs.

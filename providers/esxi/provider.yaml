@@ -1,0 +1,29 @@
+name: esxi
+display_name: "VMware ESXi"
+family: vmware
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: false
+answer_file:
+  format: kickstart
+  template: templates/ks.cfg.tmpl
+detection:
+  volume_id_patterns: ["ESXI-*", "VMware-*"]
+  files: ["mboot.efi", "boot.cfg"]
+boot:
+  pxe:
+    kernel: mboot.efi
+    cmdline: "-c {{ .BootCfgURL }} ks={{ .AnswerFileURL }}"
+  http_boot:
+    kernel: mboot.efi
+    cmdline: "-c {{ .BootCfgURL }} ks={{ .AnswerFileURL }}"
+notes: >
+  Uses the ESXi weasel kickstart (ks=). HELBOOT rewrites the served
+  boot.cfg prefix (the original ISO stays untouched). Secure Boot with
+  network-booted mboot.efi is not reliable across firmware
+  implementations and is therefore not declared. Broadcom's download
+  gating means users must supply their own ISO entitlement.

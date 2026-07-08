@@ -1,0 +1,17 @@
+# HELBOOT kickstart template (VMware ESXi weasel). Rendered per host
+# from the profile configuration.
+
+vmaccepteula
+
+rootpw {{ .Password }}
+
+install --firstdisk --overwritevmfs
+
+network --bootproto=dhcp --hostname={{ .Hostname }}
+
+reboot
+
+{{- if .PostScript }}
+%firstboot --interpreter=busybox
+{{ .PostScript }}
+{{- end }}

@@ -1,0 +1,28 @@
+name: truenas-scale
+display_name: "TrueNAS SCALE"
+family: debian
+capabilities:
+  iso: true
+  unattended_install: false
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: false
+answer_file:
+  format: none
+detection:
+  volume_id_patterns: ["TrueNAS*"]
+  files: ["TrueNAS-SCALE.update"]
+boot:
+  pxe:
+    kernel: vmlinuz
+    initrd: [initrd.img]
+  http_boot:
+    kernel: vmlinuz
+    initrd: [initrd.img]
+notes: >
+  TrueNAS SCALE's installer has no supported unattended answer file; the
+  official installer is interactive. HELBOOT can network-boot the
+  installer (saving the USB stick), and the provider is prepared to adopt
+  an unattended path if iX Systems exposes one. Documented limitation per
+  specification §8.

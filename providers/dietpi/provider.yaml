@@ -1,0 +1,22 @@
+name: dietpi
+display_name: "DietPi"
+family: appliance
+capabilities:
+  iso: false
+  image: true
+  unattended_install: true
+  pxe: false
+  http_boot: false
+  usb_boot: false
+  secure_boot: false
+answer_file:
+  format: dietpi.txt
+  template: templates/dietpi.txt.tmpl
+detection:
+  files: ["boot/dietpi.txt", "boot/dietpi"]
+notes: >
+  DietPi ships as ready-made disk images (not installer ISOs) that are
+  written to the target medium; automation happens through dietpi.txt
+  first-boot configuration injected next to the image. HELBOOT v1
+  generates the dietpi.txt from a profile; direct image deployment to
+  disks/SD cards is a documented follow-up (image-write capability).

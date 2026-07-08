@@ -1,0 +1,29 @@
+# HELBOOT autoinstall template (Ubuntu, subiquity). Served as cloud-init
+# NoCloud user-data; rendered per host from the profile configuration.
+#cloud-config
+autoinstall:
+  version: 1
+  locale: {{ .Locale }}
+  keyboard:
+    layout: {{ .Keyboard }}
+  identity:
+    hostname: {{ .Hostname }}
+    username: {{ .Username }}
+    password: "{{ .PasswordHash }}"
+  ssh:
+    install-server: true
+    allow-pw: {{ .SSHAllowPassword }}
+  storage:
+    layout:
+      name: {{ .StorageLayout }}
+  packages:
+{{- range .Packages }}
+    - {{ . }}
+{{- end }}
+  timezone: {{ .Timezone }}
+{{- if .LateCommands }}
+  late-commands:
+{{- range .LateCommands }}
+    - {{ . }}
+{{- end }}
+{{- end }}

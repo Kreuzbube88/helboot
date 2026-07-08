@@ -1,0 +1,29 @@
+name: debian
+display_name: "Debian"
+family: debian
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: true
+answer_file:
+  format: preseed
+  template: templates/preseed.cfg.tmpl
+detection:
+  volume_id_patterns: ["Debian *"]
+  files: [".disk/info", "dists"]
+boot:
+  pxe:
+    kernel: install.amd/vmlinuz
+    initrd: [install.amd/initrd.gz]
+    cmdline: "auto=true priority=critical url={{ .AnswerFileURL }}"
+  http_boot:
+    kernel: install.amd/vmlinuz
+    initrd: [install.amd/initrd.gz]
+    cmdline: "auto=true priority=critical url={{ .AnswerFileURL }}"
+notes: >
+  Uses debian-installer preseeding. Netinst and full DVD ISOs are both
+  supported; package installation can pull from the ISO contents served
+  over HTTP or directly from a Debian mirror.

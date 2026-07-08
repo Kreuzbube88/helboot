@@ -1,0 +1,27 @@
+name: windows11
+display_name: "Windows 11"
+family: windows
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: true
+answer_file:
+  format: autounattend.xml
+  template: templates/autounattend.xml.tmpl
+detection:
+  volume_id_patterns: ["CCCOMA_X64FRE*", "CPBA_X64FRE*"]
+  files: ["sources/install.wim", "sources/boot.wim"]
+boot:
+  pxe:
+    kernel: wimboot
+    requires: [winpe]
+  http_boot:
+    kernel: wimboot
+    requires: [winpe]
+notes: >
+  TPM 2.0 / Secure Boot / RAM hardware checks can be bypassed for lab
+  hardware via registry keys in the generated autounattend.xml (profile
+  option), matching common homelab practice.

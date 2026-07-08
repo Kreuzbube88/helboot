@@ -1,0 +1,30 @@
+name: proxmox-ve
+display_name: "Proxmox VE"
+family: debian
+capabilities:
+  iso: true
+  unattended_install: true
+  pxe: true
+  http_boot: true
+  usb_boot: true
+  secure_boot: false
+answer_file:
+  format: answer.toml
+  template: templates/answer.toml.tmpl
+detection:
+  volume_id_patterns: ["PVE*", "Proxmox*"]
+  files: ["boot/linux26", ".pve-cd-id.txt"]
+boot:
+  pxe:
+    kernel: boot/linux26
+    initrd: [boot/initrd.img]
+    cmdline: "vga=791 video=vesafb:ywrap,mtrr ramdisk_size=16777216 rw quiet proxmox-start-auto-installer"
+  http_boot:
+    kernel: boot/linux26
+    initrd: [boot/initrd.img]
+    cmdline: "vga=791 video=vesafb:ywrap,mtrr ramdisk_size=16777216 rw quiet proxmox-start-auto-installer"
+notes: >
+  Uses the official Proxmox automated installation (answer.toml) available
+  since PVE 8.2, fetched via the auto-installer's HTTP answer mechanism.
+  Older PVE ISOs without the auto-installer are detected and flagged as
+  manual-install only. Secure Boot support depends on the PVE version.
