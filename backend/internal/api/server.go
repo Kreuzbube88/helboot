@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/kreuzbube88/helboot/backend/internal/backup"
 	"github.com/kreuzbube88/helboot/backend/internal/boot"
 	"github.com/kreuzbube88/helboot/backend/internal/iso"
+	"github.com/kreuzbube88/helboot/backend/internal/logging"
 	"github.com/kreuzbube88/helboot/backend/internal/model"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
@@ -20,7 +22,8 @@ const SessionTTL = 7 * 24 * time.Hour
 
 // Deps are the collaborators the API server exposes over HTTP. Optional
 // fields may be nil: StaticFiles (API-only mode, used in tests), Boot
-// (no /boot surface) and ISOs (ISO endpoints return 503).
+// (no /boot surface); nil ISOs, Backup or LogRing make their endpoints
+// return 503.
 type Deps struct {
 	Log         *slog.Logger
 	Store       *store.Store
@@ -30,6 +33,8 @@ type Deps struct {
 	StaticFiles http.Handler
 	Boot        *boot.Handler
 	ISOs        *iso.Manager
+	Backup      *backup.Manager
+	LogRing     *logging.Ring
 }
 
 // Server wires the HTTP routes to the application services.
@@ -42,6 +47,8 @@ type Server struct {
 	staticFiles  http.Handler
 	boot         *boot.Handler
 	isos         *iso.Manager
+	backup       *backup.Manager
+	logRing      *logging.Ring
 	loginLimiter *rateLimiter
 	handler      http.Handler
 }
@@ -57,6 +64,8 @@ func New(d Deps) *Server {
 		staticFiles: d.StaticFiles,
 		boot:        d.Boot,
 		isos:        d.ISOs,
+		backup:      d.Backup,
+		logRing:     d.LogRing,
 		// 5 attempts immediately, then one attempt every 2 seconds per
 		// client IP — brute-force protection on login (§29).
 		loginLimiter: newRateLimiter(5, 2*time.Second),
@@ -83,6 +92,9 @@ func (s *Server) buildRoutes() http.Handler {
 	mux.Handle("GET /api/v1/auth/me", s.require(model.RoleViewer, s.handleMe))
 
 	mux.Handle("GET /api/v1/system/info", s.require(model.RoleViewer, s.handleSystemInfo))
+	mux.Handle("GET /api/v1/logs", s.require(model.RoleViewer, s.handleLogs))
+	mux.Handle("GET /api/v1/backup/export", s.require(model.RoleAdmin, s.handleBackupExport))
+	mux.Handle("POST /api/v1/backup/import", s.require(model.RoleAdmin, s.handleBackupImport))
 
 	mux.Handle("GET /api/v1/providers", s.require(model.RoleViewer, s.handleListProviders))
 	mux.Handle("GET /api/v1/providers/{name}", s.require(model.RoleViewer, s.handleGetProvider))

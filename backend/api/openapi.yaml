@@ -24,6 +24,8 @@ tags:
   - name: isos
   - name: installations
   - name: network
+  - name: logs
+  - name: backup
 
 paths:
   /health:
@@ -341,6 +343,78 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/ProfileVersion" }
         "404": { $ref: "#/components/responses/NotFound" }
+
+  /logs:
+    get:
+      tags: [logs]
+      summary: Recent log entries (newest first)
+      parameters:
+        - name: level
+          in: query
+          schema: { type: string, enum: [debug, info, warn, error], default: info }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 200 }
+      responses:
+        "200":
+          description: Buffered log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    time: { type: string, format: date-time }
+                    level: { type: string }
+                    message: { type: string }
+                    attrs:
+                      type: object
+                      additionalProperties: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /backup/export:
+    get:
+      tags: [backup]
+      summary: Download a full-state backup archive (admin)
+      description: >
+        tar.gz with a consistent database snapshot (settings, users,
+        hosts, profiles with versions, installation history, ISO
+        checksums). ISO files are excluded by size; their checksums allow
+        detecting missing images after a restore.
+      responses:
+        "200":
+          description: Backup archive
+          content:
+            application/gzip:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /backup/import:
+    post:
+      tags: [backup]
+      summary: Stage a backup archive for restore (admin)
+      description: The restore is applied on the next restart.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          description: Staged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  staged: { type: boolean }
+                  restartRequired: { type: boolean }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
   /installations:
     get:

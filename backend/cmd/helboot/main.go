@@ -16,6 +16,7 @@ import (
 
 	"github.com/kreuzbube88/helboot/backend/api"
 	apihttp "github.com/kreuzbube88/helboot/backend/internal/api"
+	"github.com/kreuzbube88/helboot/backend/internal/backup"
 	"github.com/kreuzbube88/helboot/backend/internal/boot"
 	"github.com/kreuzbube88/helboot/backend/internal/config"
 	"github.com/kreuzbube88/helboot/backend/internal/db"
@@ -39,7 +40,10 @@ func main() {
 
 func run() error {
 	cfg := config.FromEnv()
-	log := logging.New(os.Stdout, cfg.LogLevel, cfg.LogFormat)
+	// The ring buffer feeds the UI log viewer (§30); 1000 entries cover
+	// a comfortable scrollback without measurable memory cost.
+	logRing := logging.NewRing(1000)
+	log := logging.New(os.Stdout, cfg.LogLevel, cfg.LogFormat, logRing)
 	log.Info("starting HELBOOT", "version", version)
 
 	for _, dir := range []string{
@@ -51,6 +55,14 @@ func run() error {
 		if err := os.MkdirAll(dir, 0o750); err != nil {
 			return fmt.Errorf("create data directory %s: %w", dir, err)
 		}
+	}
+
+	// A staged backup restore (POST /api/v1/backup/import) is applied
+	// here, before the database is opened (§31).
+	if applied, err := backup.ApplyPendingRestore(cfg.DataDir, cfg.DatabasePath()); err != nil {
+		return fmt.Errorf("apply staged restore: %w", err)
+	} else if applied {
+		log.Info("staged backup restore applied")
 	}
 
 	sqlDB, err := db.Open(cfg.DatabasePath())
@@ -78,6 +90,8 @@ func run() error {
 		StaticFiles: web.Handler(),
 		Boot:        boot.New(log, st, registry, isoManager, cfg.AssetsPath(), cfg.ProvidersDir),
 		ISOs:        isoManager,
+		Backup:      backup.NewManager(sqlDB, cfg.DataDir, version),
+		LogRing:     logRing,
 	})
 	httpServer := &http.Server{
 		Addr:              cfg.HTTPAddr,
