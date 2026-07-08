@@ -90,6 +90,13 @@ func (s *Server) buildRoutes() http.Handler {
 	// Session-protected endpoints, by minimum role.
 	mux.Handle("POST /api/v1/auth/logout", s.require(model.RoleViewer, s.handleLogout))
 	mux.Handle("GET /api/v1/auth/me", s.require(model.RoleViewer, s.handleMe))
+	mux.Handle("POST /api/v1/auth/password", s.require(model.RoleViewer, s.handleChangeOwnPassword))
+
+	mux.Handle("GET /api/v1/users", s.require(model.RoleAdmin, s.handleListUsers))
+	mux.Handle("POST /api/v1/users", s.require(model.RoleAdmin, s.handleCreateUser))
+	mux.Handle("PUT /api/v1/users/{id}", s.require(model.RoleAdmin, s.handleUpdateUser))
+	mux.Handle("PUT /api/v1/users/{id}/password", s.require(model.RoleAdmin, s.handleSetUserPassword))
+	mux.Handle("DELETE /api/v1/users/{id}", s.require(model.RoleAdmin, s.handleDeleteUser))
 
 	mux.Handle("GET /api/v1/system/info", s.require(model.RoleViewer, s.handleSystemInfo))
 	mux.Handle("GET /api/v1/logs", s.require(model.RoleViewer, s.handleLogs))

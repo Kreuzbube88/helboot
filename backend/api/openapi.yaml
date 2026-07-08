@@ -18,6 +18,7 @@ tags:
   - name: system
   - name: setup
   - name: auth
+  - name: users
   - name: providers
   - name: hosts
   - name: profiles
@@ -152,6 +153,117 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/SessionInfo" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/password:
+    post:
+      tags: [auth]
+      summary: Change your own password
+      description: Verifies the current password; all sessions are revoked on success.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 10 }
+      responses:
+        "200": { description: Changed; re-login required }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { description: Current password incorrect, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /users:
+    get:
+      tags: [users]
+      summary: List users (admin)
+      responses:
+        "200":
+          description: All accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/User" }
+        "403": { description: Requires admin role, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    post:
+      tags: [users]
+      summary: Create a user (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, role]
+              properties:
+                username: { type: string, minLength: 3 }
+                password: { type: string, minLength: 10 }
+                role: { type: string, enum: [admin, operator, viewer] }
+                locale: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { description: Username taken, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /users/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    put:
+      tags: [users]
+      summary: Change a user's role (admin)
+      description: The last administrator cannot be demoted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [admin, operator, viewer] }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { description: Last administrator, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    delete:
+      tags: [users]
+      summary: Delete a user (admin)
+      description: Self-deletion and removing the last administrator are rejected.
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { description: Self or last administrator, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /users/{id}/password:
+    put:
+      tags: [users]
+      summary: Reset a user's password (admin)
+      description: All sessions of the user are revoked.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 10 }
+      responses:
+        "200": { description: Updated }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /providers:
     get:

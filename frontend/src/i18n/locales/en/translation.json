@@ -10,6 +10,7 @@
     "isos": "ISO images",
     "installations": "Installations",
     "logs": "Logs",
+    "users": "Users",
     "settings": "Settings",
     "logout": "Log out"
   },
@@ -132,6 +133,28 @@
     "queue": "Install",
     "queued": "Installation queued — the machine will install on its next network boot."
   },
+  "users": {
+    "title": "Users",
+    "add": "Add user",
+    "username": "Username",
+    "password": "Password",
+    "role": "Role",
+    "created": "Created",
+    "roleAdmin": "Administrator",
+    "roleOperator": "Operator",
+    "roleViewer": "Viewer",
+    "resetPassword": "Reset password",
+    "resetPasswordPrompt": "New password for {{name}} (at least 10 characters):",
+    "confirmDelete": "Delete this user?",
+    "passwordHint": "At least 10 characters."
+  },
+  "account": {
+    "title": "Change password",
+    "current": "Current password",
+    "new": "New password",
+    "changed": "Password changed. Please sign in again.",
+    "submit": "Change password"
+  },
   "logs": {
     "title": "Logs",
     "level": "Level",
@@ -225,6 +248,15 @@
       "unavailable": "Backup is not available",
       "invalid_upload": "Invalid upload",
       "invalid_archive": "This is not a valid HELBOOT backup archive"
+    },
+    "user": {
+      "invalid_username": "Username must have at least 3 characters",
+      "weak_password": "Password must have at least 10 characters",
+      "invalid_role": "Invalid role",
+      "exists": "A user with this name already exists",
+      "last_admin": "The last administrator cannot be removed or demoted",
+      "cannot_delete_self": "You cannot delete your own account",
+      "wrong_password": "The current password is incorrect"
     }
   }
 }

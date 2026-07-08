@@ -13,6 +13,7 @@ import { Logs } from './pages/Logs'
 import { Profiles } from './pages/Profiles'
 import { Settings } from './pages/Settings'
 import { SetupWizard } from './pages/SetupWizard'
+import { Users } from './pages/Users'
 
 type Boot =
   | { state: 'loading' }
@@ -62,6 +63,9 @@ export default function App() {
           <Route path="isos" element={<Isos />} />
           <Route path="installations" element={<Installations />} />
           <Route path="logs" element={<Logs />} />
+          {boot.user.role === 'admin' && (
+            <Route path="users" element={<Users currentUser={boot.user} />} />
+          )}
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -54,7 +54,7 @@ export function Settings() {
     }
   }
 
-  const set = <K extends keyof NetworkConfig>(key: K, value: NetworkConfig[K]) =>
+  const setField = <K extends keyof NetworkConfig>(key: K, value: NetworkConfig[K]) =>
     setCfg(cfg ? { ...cfg, [key]: value } : cfg)
   const setDHCP = <K extends keyof NetworkConfig['dhcp']>(key: K, value: NetworkConfig['dhcp'][K]) =>
     setCfg(cfg ? { ...cfg, dhcp: { ...cfg.dhcp, [key]: value } } : cfg)
@@ -82,7 +82,7 @@ export function Settings() {
           <select
             id="mode"
             value={cfg.mode}
-            onChange={(e) => set('mode', e.target.value as NetworkConfig['mode'])}
+            onChange={(e) => setField('mode', e.target.value as NetworkConfig['mode'])}
           >
             <option value="proxy_dhcp">{t('setup.modeProxyDhcp')}</option>
             <option value="dhcp">{t('setup.modeDhcp')}</option>
@@ -93,7 +93,7 @@ export function Settings() {
           <input
             id="server-ip"
             value={cfg.serverIp}
-            onChange={(e) => set('serverIp', e.target.value)}
+            onChange={(e) => setField('serverIp', e.target.value)}
             placeholder="192.168.1.10"
           />
           <small className="muted">{t('settings.serverIpHint')}</small>
@@ -165,6 +165,8 @@ export function Settings() {
         </button>
       </form>
 
+      <PasswordCard />
+
       <div className="card form-narrow">
         <h2>{t('settings.backup')}</h2>
         <p className="muted">{t('settings.backupHint')}</p>
@@ -188,5 +190,62 @@ export function Settings() {
         </div>
       </div>
     </>
+  )
+}
+
+/** Self-service password change; a successful change revokes every
+ * session, so the app reloads onto the login screen. */
+function PasswordCard() {
+  const { t } = useTranslation()
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [error, setError] = useState<unknown>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      await api.post('/auth/password', { currentPassword: current, newPassword: next })
+      window.alert(t('account.changed'))
+      window.location.reload()
+    } catch (err) {
+      setError(err)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="card form-narrow" onSubmit={submit} style={{ marginBottom: '1.5rem' }}>
+      <h2>{t('account.title')}</h2>
+      <div className="field">
+        <label htmlFor="pw-current">{t('account.current')}</label>
+        <input
+          id="pw-current"
+          type="password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          autoComplete="current-password"
+          required
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="pw-new">{t('account.new')}</label>
+        <input
+          id="pw-new"
+          type="password"
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+          autoComplete="new-password"
+          required
+        />
+        <small className="muted">{t('users.passwordHint')}</small>
+      </div>
+      <ErrorMessage error={error} />
+      <button className="primary" type="submit" disabled={busy}>
+        {t('account.submit')}
+      </button>
+    </form>
   )
 }

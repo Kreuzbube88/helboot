@@ -10,6 +10,7 @@
     "isos": "ISO-Abbilder",
     "installations": "Installationen",
     "logs": "Protokolle",
+    "users": "Benutzer",
     "settings": "Einstellungen",
     "logout": "Abmelden"
   },
@@ -132,6 +133,28 @@
     "queue": "Installieren",
     "queued": "Installation geplant — das Gerät installiert beim nächsten Netzwerkstart."
   },
+  "users": {
+    "title": "Benutzer",
+    "add": "Benutzer hinzufügen",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "role": "Rolle",
+    "created": "Erstellt",
+    "roleAdmin": "Administrator",
+    "roleOperator": "Operator",
+    "roleViewer": "Betrachter",
+    "resetPassword": "Passwort zurücksetzen",
+    "resetPasswordPrompt": "Neues Passwort für {{name}} (mindestens 10 Zeichen):",
+    "confirmDelete": "Diesen Benutzer löschen?",
+    "passwordHint": "Mindestens 10 Zeichen."
+  },
+  "account": {
+    "title": "Passwort ändern",
+    "current": "Aktuelles Passwort",
+    "new": "Neues Passwort",
+    "changed": "Passwort geändert. Bitte melden Sie sich erneut an.",
+    "submit": "Passwort ändern"
+  },
   "logs": {
     "title": "Protokolle",
     "level": "Stufe",
@@ -225,6 +248,15 @@
       "unavailable": "Sicherung ist nicht verfügbar",
       "invalid_upload": "Ungültiger Upload",
       "invalid_archive": "Dies ist kein gültiges HELBOOT-Sicherungsarchiv"
+    },
+    "user": {
+      "invalid_username": "Der Benutzername muss mindestens 3 Zeichen haben",
+      "weak_password": "Das Passwort muss mindestens 10 Zeichen haben",
+      "invalid_role": "Ungültige Rolle",
+      "exists": "Ein Benutzer mit diesem Namen existiert bereits",
+      "last_admin": "Der letzte Administrator kann nicht entfernt oder herabgestuft werden",
+      "cannot_delete_self": "Sie können Ihr eigenes Konto nicht löschen",
+      "wrong_password": "Das aktuelle Passwort ist falsch"
     }
   }
 }
