@@ -3,7 +3,7 @@
 #   docker build -f deploy/docker/Dockerfile -t helboot .
 
 # Stage 1: build the frontend.
-FROM node:22-alpine AS frontend
+FROM node:26-alpine AS frontend
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
@@ -11,7 +11,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: build the Go binary with the frontend embedded.
-FROM golang:1.24-alpine AS backend
+FROM golang:1.26-alpine AS backend
 WORKDIR /src/backend
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
@@ -25,13 +25,13 @@ RUN CGO_ENABLED=0 go build -trimpath \
     -o /helboot ./cmd/helboot
 
 # Stage 3: fetch the iPXE bootstrap binaries served via TFTP (ADR-0011).
-FROM alpine:3.21 AS ipxe
+FROM alpine:3.24 AS ipxe
 RUN apk add --no-cache curl
 COPY deploy/scripts/fetch-ipxe.sh /fetch-ipxe.sh
 RUN sh /fetch-ipxe.sh /ipxe
 
 # Stage 4: minimal runtime image.
-FROM alpine:3.21
+FROM alpine:3.24
 RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -S helboot && adduser -S -G helboot helboot
 COPY --from=backend /helboot /usr/local/bin/helboot
