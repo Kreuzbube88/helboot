@@ -99,6 +99,7 @@ func (s *Server) handleCreateInstallation(w http.ResponseWriter, r *http.Request
 		return
 	}
 	s.log.Info("installation queued", "host", host.MAC, "profile", profile.Name, "version", version.Version)
+	s.audit(r, "installation.create", "installation", inst.ID)
 	writeJSON(w, http.StatusCreated, inst)
 }
 
@@ -121,5 +122,6 @@ func (s *Server) handleDeleteInstallation(w http.ResponseWriter, r *http.Request
 		s.internalError(w, err)
 		return
 	}
+	s.audit(r, "installation.cancel", "installation", id)
 	w.WriteHeader(http.StatusNoContent)
 }

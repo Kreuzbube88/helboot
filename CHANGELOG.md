@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   viewer backed by a structured log ring buffer.
 - Frontend pages for ISOs (upload/scan), installations, logs and
   settings (network mode, DHCP range, backup) in English and German.
+- User management: admin creates/edits/deletes accounts with the
+  administrator/operator/viewer roles, admin password resets, and
+  password self-service; the last administrator is protected and
+  password changes revoke all sessions.
+- Profile clone, export and import as portable JSON documents.
+- Downloadable USB/CD boot media (iPXE images) for machines without
+  PXE-capable firmware.
+- Audit log entries for privileged actions and failed logins.
 - Unraid template icon.
 
 - Project architecture, component model and Architecture Decision Records.

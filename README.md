@@ -11,10 +11,14 @@ PXE is just one boot method. The architecture is built to grow: iPXE,
 HTTP boot, USB boot images, VM provisioning, cloud-init, Redfish and IPMI
 are all part of the roadmap.
 
-> **Status:** Early development. The architecture, provider model, API and
-> project scaffolding are in place; core features are being implemented.
-> See [ARCHITECTURE.md](docs/ARCHITECTURE.md) and the
-> [ADRs](docs/adr/) for where this is going.
+> **Status:** Early development, moving fast. Implemented so far: the
+> full network boot chain (ProxyDHCP/DHCP, TFTP, iPXE scripts, answer
+> files), ISO management with automatic OS detection, the installation
+> queue, host discovery, user management with roles, backup/restore,
+> a log viewer and USB/CD boot media — all behind a bilingual (en/de)
+> web UI. Not yet hardened for production use; field testing of the
+> boot chain against real hardware is ongoing. See
+> [ARCHITECTURE.md](docs/ARCHITECTURE.md) and the [ADRs](docs/adr/).
 
 ## Why HELBOOT?
 

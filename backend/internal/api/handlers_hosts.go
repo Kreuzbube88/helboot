@@ -79,6 +79,7 @@ func (s *Server) handleCreateHost(w http.ResponseWriter, r *http.Request) {
 		s.internalError(w, err)
 		return
 	}
+	s.audit(r, "host.create", "host", created.ID)
 	writeJSON(w, http.StatusCreated, created)
 }
 
@@ -127,6 +128,7 @@ func (s *Server) handleDeleteHost(w http.ResponseWriter, r *http.Request) {
 		s.storeError(w, err)
 		return
 	}
+	s.audit(r, "host.delete", "host", id)
 	w.WriteHeader(http.StatusNoContent)
 }
 

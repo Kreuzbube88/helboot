@@ -67,5 +67,6 @@ func (s *Server) handleBackupImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.log.Info("backup import staged; restart required to apply")
+	s.audit(r, "backup.import", "backup", 0)
 	writeJSON(w, http.StatusOK, map[string]bool{"staged": true, "restartRequired": true})
 }

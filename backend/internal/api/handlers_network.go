@@ -93,6 +93,7 @@ func (s *Server) handlePutNetworkConfig(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
+	s.audit(r, "network.update_config", "settings", 0)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"saved":           true,
 		"restartRequired": true,

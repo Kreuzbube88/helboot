@@ -62,6 +62,7 @@ func (s *Server) handleUploadISO(w http.ResponseWriter, r *http.Request) {
 		s.internalError(w, err)
 		return
 	}
+	s.audit(r, "iso.upload", "iso", img.ID)
 	writeJSON(w, http.StatusCreated, img)
 }
 
@@ -93,5 +94,6 @@ func (s *Server) handleDeleteISO(w http.ResponseWriter, r *http.Request) {
 		s.storeError(w, err)
 		return
 	}
+	s.audit(r, "iso.delete", "iso", id)
 	w.WriteHeader(http.StatusNoContent)
 }

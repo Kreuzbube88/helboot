@@ -54,6 +54,7 @@ func (s *Server) handleCreateProfile(w http.ResponseWriter, r *http.Request) {
 		s.internalError(w, err)
 		return
 	}
+	s.audit(r, "profile.create", "profile", created.ID)
 	writeJSON(w, http.StatusCreated, created)
 }
 
@@ -126,5 +127,6 @@ func (s *Server) handleDeleteProfile(w http.ResponseWriter, r *http.Request) {
 		s.storeError(w, err)
 		return
 	}
+	s.audit(r, "profile.delete", "profile", id)
 	w.WriteHeader(http.StatusNoContent)
 }

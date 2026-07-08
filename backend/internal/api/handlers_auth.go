@@ -44,6 +44,9 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	ok, verr := auth.VerifyPassword(req.Password, hash)
 	if verr != nil || !ok || user == nil {
 		s.log.Warn("failed login attempt", "username", req.Username, "ip", clientIP(r))
+		if err := s.store.AddAudit(nil, "auth.login_failed", "user", req.Username); err != nil {
+			s.log.Error("audit write failed", "error", err)
+		}
 		writeError(w, http.StatusUnauthorized, "auth.invalid_credentials", "invalid username or password")
 		return
 	}
