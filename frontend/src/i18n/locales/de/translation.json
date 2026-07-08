@@ -95,7 +95,12 @@
     "name": "Name",
     "provider": "Betriebssystem",
     "version": "Version",
-    "confirmDelete": "Dieses Profil mit allen Versionen löschen?"
+    "confirmDelete": "Dieses Profil mit allen Versionen löschen?",
+    "clone": "Klonen",
+    "clonePrompt": "Name für das geklonte Profil:",
+    "export": "Exportieren",
+    "import": "Profil importieren",
+    "imported": "Profil importiert. Weisen Sie vor der Installation ein ISO zu."
   },
   "isos": {
     "title": "ISO-Abbilder",
@@ -216,7 +221,9 @@
     "profile": {
       "invalid_name": "Der Profilname ist erforderlich",
       "unknown_provider": "Unbekanntes Betriebssystem",
-      "invalid_config": "Ungültige Profilkonfiguration"
+      "invalid_config": "Ungültige Profilkonfiguration",
+      "invalid_document": "Dies ist keine HELBOOT-Profildatei",
+      "name_exists": "Ein Profil mit diesem Namen existiert bereits"
     },
     "provider": {
       "not_found": "Unbekannter Provider"

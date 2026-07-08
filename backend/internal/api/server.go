@@ -130,6 +130,9 @@ func (s *Server) buildRoutes() http.Handler {
 	mux.Handle("POST /api/v1/profiles", s.require(model.RoleOperator, s.handleCreateProfile))
 	mux.Handle("GET /api/v1/profiles/{id}", s.require(model.RoleViewer, s.handleGetProfile))
 	mux.Handle("GET /api/v1/profiles/{id}/versions", s.require(model.RoleViewer, s.handleProfileVersions))
+	mux.Handle("POST /api/v1/profiles/{id}/clone", s.require(model.RoleOperator, s.handleCloneProfile))
+	mux.Handle("GET /api/v1/profiles/{id}/export", s.require(model.RoleViewer, s.handleExportProfile))
+	mux.Handle("POST /api/v1/profiles/import", s.require(model.RoleOperator, s.handleImportProfile))
 	mux.Handle("PUT /api/v1/profiles/{id}", s.require(model.RoleOperator, s.handleUpdateProfile))
 	mux.Handle("DELETE /api/v1/profiles/{id}", s.require(model.RoleOperator, s.handleDeleteProfile))
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
 import type { Profile, Provider } from '../api/types'
@@ -9,7 +9,9 @@ export function Profiles() {
   const [profiles, setProfiles] = useState<Profile[] | null>(null)
   const [providers, setProviders] = useState<Provider[]>([])
   const [error, setError] = useState<unknown>(null)
+  const [notice, setNotice] = useState('')
   const [adding, setAdding] = useState(false)
+  const importInput = useRef<HTMLInputElement>(null)
 
   function reload() {
     Promise.all([api.get<Profile[]>('/profiles'), api.get<Provider[]>('/providers')])
@@ -33,15 +35,54 @@ export function Profiles() {
     }
   }
 
+  async function clone(profile: Profile) {
+    const name = window.prompt(t('profiles.clonePrompt'), `${profile.name} (2)`)
+    if (!name) return
+    try {
+      await api.post(`/profiles/${profile.id}/clone`, { name })
+      reload()
+    } catch (err) {
+      setError(err)
+    }
+  }
+
+  async function importProfile(file: File) {
+    setNotice('')
+    try {
+      const doc = JSON.parse(await file.text())
+      await api.post('/profiles/import', doc)
+      setNotice(t('profiles.imported'))
+      reload()
+    } catch (err) {
+      setError(err)
+    } finally {
+      if (importInput.current) importInput.current.value = ''
+    }
+  }
+
   return (
     <>
       <div className="toolbar">
         <h1>{t('profiles.title')}</h1>
-        <button className="primary" onClick={() => setAdding(true)}>
-          {t('profiles.add')}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={() => importInput.current?.click()}>{t('profiles.import')}</button>
+          <input
+            ref={importInput}
+            type="file"
+            accept=".json,application/json"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) importProfile(file)
+            }}
+          />
+          <button className="primary" onClick={() => setAdding(true)}>
+            {t('profiles.add')}
+          </button>
+        </div>
       </div>
       <ErrorMessage error={error} />
+      {notice && <p className="muted">{notice}</p>}
       {adding && (
         <ProfileForm
           providers={providers}
@@ -72,6 +113,10 @@ export function Profiles() {
                 <td>{providers.find((x) => x.name === p.provider)?.displayName ?? p.provider}</td>
                 <td>v{p.currentVersion}</td>
                 <td>
+                  <button onClick={() => clone(p)}>{t('profiles.clone')}</button>{' '}
+                  <a href={`/api/v1/profiles/${p.id}/export`} download>
+                    <button>{t('profiles.export')}</button>
+                  </a>{' '}
                   <button className="danger" onClick={() => remove(p)}>
                     {t('common.delete')}
                   </button>

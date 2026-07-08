@@ -95,7 +95,12 @@
     "name": "Name",
     "provider": "Operating system",
     "version": "Version",
-    "confirmDelete": "Delete this profile and all its versions?"
+    "confirmDelete": "Delete this profile and all its versions?",
+    "clone": "Clone",
+    "clonePrompt": "Name for the cloned profile:",
+    "export": "Export",
+    "import": "Import profile",
+    "imported": "Profile imported. Assign an ISO before installing."
   },
   "isos": {
     "title": "ISO images",
@@ -216,7 +221,9 @@
     "profile": {
       "invalid_name": "Profile name is required",
       "unknown_provider": "Unknown operating system",
-      "invalid_config": "Invalid profile configuration"
+      "invalid_config": "Invalid profile configuration",
+      "invalid_document": "This is not a HELBOOT profile file",
+      "name_exists": "A profile with this name already exists"
     },
     "provider": {
       "not_found": "Unknown provider"
