@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>HELBOOT</Name>
+  <Repository>ghcr.io/kreuzbube88/helboot:latest</Repository>
+  <Registry>https://ghcr.io/kreuzbube88/helboot</Registry>
+  <Network>host</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Kreuzbube88/helboot/issues</Support>
+  <Project>https://github.com/Kreuzbube88/helboot</Project>
+  <Overview>
+    HELBOOT is a provisioning engine for homelabs: upload original OS ISOs,
+    build installation profiles, register machines by MAC address and get
+    fully automated network installations (PXE / iPXE / HTTP boot) for
+    Windows, Debian, Ubuntu, Fedora, openSUSE, Proxmox VE and more.
+    Works alongside your existing router DHCP (ProxyDHCP mode) or as a
+    standalone DHCP server. Host network mode is strongly recommended:
+    PXE relies on DHCP broadcasts that do not traverse Docker bridge
+    networking. Ensure UDP 67/69/4011 and TCP 8080 are free on the host.
+  </Overview>
+  <Category>Tools:Utilities Network:Management</Category>
+  <Icon>https://raw.githubusercontent.com/Kreuzbube88/helboot/main/deploy/unraid/helboot-icon.png</Icon>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <ExtraParams/>
+  <PostArgs/>
+  <DonateText/>
+  <DonateLink/>
+  <TemplateURL>https://raw.githubusercontent.com/Kreuzbube88/helboot/main/deploy/unraid/helboot.xml</TemplateURL>
+
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/helboot" Mode="rw"
+          Description="HELBOOT state: database, generated boot assets, logs, secrets."
+          Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/helboot</Config>
+
+  <Config Name="ISO Library" Target="/data/isos" Default="/mnt/user/isos" Mode="rw"
+          Description="Optional: existing share with original OS ISO files. HELBOOT never modifies them."
+          Type="Path" Display="always" Required="false" Mask="false">/mnt/user/isos</Config>
+
+  <Config Name="WebUI Port" Target="HELBOOT_HTTP_ADDR" Default=":8080" Mode=""
+          Description="HTTP listen address for the web UI, API and HTTP boot (host network). Format :PORT."
+          Type="Variable" Display="always" Required="false" Mask="false">:8080</Config>
+
+  <Config Name="Log Level" Target="HELBOOT_LOG_LEVEL" Default="info" Mode=""
+          Description="Log verbosity: debug, info, warn or error."
+          Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
+</Container>
