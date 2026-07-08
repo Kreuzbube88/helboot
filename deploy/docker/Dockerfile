@@ -25,13 +25,13 @@ RUN CGO_ENABLED=0 go build -trimpath \
     -o /helboot ./cmd/helboot
 
 # Stage 3: fetch the iPXE bootstrap binaries served via TFTP (ADR-0011).
-FROM alpine:3.21 AS ipxe
+FROM alpine:3.24 AS ipxe
 RUN apk add --no-cache curl
 COPY deploy/scripts/fetch-ipxe.sh /fetch-ipxe.sh
 RUN sh /fetch-ipxe.sh /ipxe
 
 # Stage 4: minimal runtime image.
-FROM alpine:3.21
+FROM alpine:3.24
 RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -S helboot && adduser -S -G helboot helboot
 COPY --from=backend /helboot /usr/local/bin/helboot
