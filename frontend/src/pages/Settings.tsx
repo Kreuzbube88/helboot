@@ -165,6 +165,19 @@ export function Settings() {
         </button>
       </form>
 
+      <div className="card form-narrow" style={{ marginBottom: '1.5rem' }}>
+        <h2>{t('settings.bootMedia')}</h2>
+        <p className="muted">{t('settings.bootMediaHint')}</p>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <a href="/api/v1/bootmedia/iso" download>
+            <button type="button">{t('settings.bootMediaIso')}</button>
+          </a>
+          <a href="/api/v1/bootmedia/img" download>
+            <button type="button">{t('settings.bootMediaImg')}</button>
+          </a>
+        </div>
+      </div>
+
       <PasswordCard />
 
       <div className="card form-narrow">

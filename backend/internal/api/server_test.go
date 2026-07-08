@@ -56,14 +56,19 @@ answer_file: {format: preseed}
 
 	st := store.New(sqlDB)
 	isoManager := iso.NewManager(log, t.TempDir(), st, registry)
+	assetsDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(assetsDir, "tftp"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	server := New(Deps{
 		Log:         log,
 		Store:       st,
 		Registry:    registry,
 		Version:     "test",
 		OpenAPISpec: []byte("openapi: 3.1.0"),
-		Boot:        boot.New(log, st, registry, isoManager, t.TempDir(), providersDir),
+		Boot:        boot.New(log, st, registry, isoManager, assetsDir, providersDir),
 		ISOs:        isoManager,
+		AssetsDir:   assetsDir,
 	})
 	ts := httptest.NewServer(server.Handler())
 	t.Cleanup(ts.Close)

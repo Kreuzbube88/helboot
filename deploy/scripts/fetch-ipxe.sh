@@ -25,4 +25,10 @@ fetch "ipxe.efi" "ipxe.efi"               # x86_64 UEFI
 fetch "i386-efi/ipxe.efi" "ipxe-i386.efi" # 32-bit UEFI
 fetch "arm64-efi/ipxe.efi" "ipxe-arm64.efi" # ARM64 UEFI (e.g. Raspberry Pi)
 
+# Boot media for machines without PXE (§21): the user writes these to a
+# CD/USB stick; the stick boots iPXE, which then reaches HELBOOT over
+# the network exactly like a PXE client.
+fetch "ipxe.iso" "ipxe.iso" # bootable CD/DVD image
+fetch "ipxe.usb" "ipxe.usb" # raw USB disk image
+
 echo "done: $(ls "$TARGET" | tr '\n' ' ')"

@@ -35,6 +35,9 @@ type Deps struct {
 	ISOs        *iso.Manager
 	Backup      *backup.Manager
 	LogRing     *logging.Ring
+	// AssetsDir is the boot assets root; used to serve downloadable
+	// USB/CD boot media (§21).
+	AssetsDir string
 }
 
 // Server wires the HTTP routes to the application services.
@@ -49,6 +52,7 @@ type Server struct {
 	isos         *iso.Manager
 	backup       *backup.Manager
 	logRing      *logging.Ring
+	assetsDir    string
 	loginLimiter *rateLimiter
 	handler      http.Handler
 }
@@ -66,6 +70,7 @@ func New(d Deps) *Server {
 		isos:        d.ISOs,
 		backup:      d.Backup,
 		logRing:     d.LogRing,
+		assetsDir:   d.AssetsDir,
 		// 5 attempts immediately, then one attempt every 2 seconds per
 		// client IP — brute-force protection on login (§29).
 		loginLimiter: newRateLimiter(5, 2*time.Second),
@@ -100,6 +105,7 @@ func (s *Server) buildRoutes() http.Handler {
 
 	mux.Handle("GET /api/v1/system/info", s.require(model.RoleViewer, s.handleSystemInfo))
 	mux.Handle("GET /api/v1/logs", s.require(model.RoleViewer, s.handleLogs))
+	mux.Handle("GET /api/v1/bootmedia/{format}", s.require(model.RoleViewer, s.handleBootMedia))
 	mux.Handle("GET /api/v1/backup/export", s.require(model.RoleAdmin, s.handleBackupExport))
 	mux.Handle("POST /api/v1/backup/import", s.require(model.RoleAdmin, s.handleBackupImport))
 

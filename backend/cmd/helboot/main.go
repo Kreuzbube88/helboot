@@ -92,6 +92,7 @@ func run() error {
 		ISOs:        isoManager,
 		Backup:      backup.NewManager(sqlDB, cfg.DataDir, version),
 		LogRing:     logRing,
+		AssetsDir:   cfg.AssetsPath(),
 	})
 	httpServer := &http.Server{
 		Addr:              cfg.HTTPAddr,

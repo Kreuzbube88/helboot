@@ -186,7 +186,11 @@
     "backupExport": "Download backup",
     "backupImport": "Restore backup",
     "backupImportStaged": "Backup staged. Restart HELBOOT to apply the restore.",
-    "backupHint": "The backup contains the database: settings, users, hosts, profiles and history. ISO files are not included."
+    "backupHint": "The backup contains the database: settings, users, hosts, profiles and history. ISO files are not included.",
+    "bootMedia": "Boot media (no PXE required)",
+    "bootMediaHint": "For machines that cannot PXE boot: download the image, write it to a CD or USB stick (e.g. with Rufus, balenaEtcher or dd), and boot from it. The stick starts iPXE, which contacts HELBOOT over the network like any PXE client.",
+    "bootMediaIso": "Download CD/DVD image (.iso)",
+    "bootMediaImg": "Download USB image (.img)"
   },
   "errors": {
     "internal": "Internal server error",
@@ -255,6 +259,11 @@
       "unavailable": "Backup is not available",
       "invalid_upload": "Invalid upload",
       "invalid_archive": "This is not a valid HELBOOT backup archive"
+    },
+    "bootmedia": {
+      "invalid_format": "Unknown boot medium format",
+      "unavailable": "Boot media are not available",
+      "missing": "Boot medium not found on the server"
     },
     "user": {
       "invalid_username": "Username must have at least 3 characters",

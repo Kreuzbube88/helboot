@@ -186,7 +186,11 @@
     "backupExport": "Sicherung herunterladen",
     "backupImport": "Sicherung wiederherstellen",
     "backupImportStaged": "Sicherung vorbereitet. Starten Sie HELBOOT neu, um die Wiederherstellung anzuwenden.",
-    "backupHint": "Die Sicherung enthält die Datenbank: Einstellungen, Benutzer, Hosts, Profile und Historie. ISO-Dateien sind nicht enthalten."
+    "backupHint": "Die Sicherung enthält die Datenbank: Einstellungen, Benutzer, Hosts, Profile und Historie. ISO-Dateien sind nicht enthalten.",
+    "bootMedia": "Boot-Medien (ohne PXE)",
+    "bootMediaHint": "Für Geräte ohne PXE-Boot: Abbild herunterladen, auf CD oder USB-Stick schreiben (z. B. mit Rufus, balenaEtcher oder dd) und davon starten. Der Stick startet iPXE, das HELBOOT wie ein PXE-Client über das Netzwerk erreicht.",
+    "bootMediaIso": "CD/DVD-Abbild herunterladen (.iso)",
+    "bootMediaImg": "USB-Abbild herunterladen (.img)"
   },
   "errors": {
     "internal": "Interner Serverfehler",
@@ -255,6 +259,11 @@
       "unavailable": "Sicherung ist nicht verfügbar",
       "invalid_upload": "Ungültiger Upload",
       "invalid_archive": "Dies ist kein gültiges HELBOOT-Sicherungsarchiv"
+    },
+    "bootmedia": {
+      "invalid_format": "Unbekanntes Boot-Medium-Format",
+      "unavailable": "Boot-Medien sind nicht verfügbar",
+      "missing": "Boot-Medium auf dem Server nicht gefunden"
     },
     "user": {
       "invalid_username": "Der Benutzername muss mindestens 3 Zeichen haben",
