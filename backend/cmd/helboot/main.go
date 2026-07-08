@@ -19,6 +19,7 @@ import (
 	"github.com/kreuzbube88/helboot/backend/internal/boot"
 	"github.com/kreuzbube88/helboot/backend/internal/config"
 	"github.com/kreuzbube88/helboot/backend/internal/db"
+	"github.com/kreuzbube88/helboot/backend/internal/iso"
 	"github.com/kreuzbube88/helboot/backend/internal/logging"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/service"
@@ -67,8 +68,16 @@ func run() error {
 		return err
 	}
 
-	bootHandler := boot.New(log, st, cfg.AssetsPath())
-	server := apihttp.New(log, st, registry, version, api.OpenAPISpec, web.Handler(), bootHandler)
+	server := apihttp.New(apihttp.Deps{
+		Log:         log,
+		Store:       st,
+		Registry:    registry,
+		Version:     version,
+		OpenAPISpec: api.OpenAPISpec,
+		StaticFiles: web.Handler(),
+		Boot:        boot.New(log, st, cfg.AssetsPath()),
+		ISOs:        iso.NewManager(log, filepath.Join(cfg.DataDir, "isos"), st, registry),
+	})
 	httpServer := &http.Server{
 		Addr:              cfg.HTTPAddr,
 		Handler:           server.Handler(),

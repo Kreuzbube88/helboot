@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/kreuzbube88/helboot/backend/internal/boot"
+	"github.com/kreuzbube88/helboot/backend/internal/iso"
 	"github.com/kreuzbube88/helboot/backend/internal/model"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
@@ -16,6 +17,20 @@ import (
 
 // SessionTTL is the absolute lifetime of a login session.
 const SessionTTL = 7 * 24 * time.Hour
+
+// Deps are the collaborators the API server exposes over HTTP. Optional
+// fields may be nil: StaticFiles (API-only mode, used in tests), Boot
+// (no /boot surface) and ISOs (ISO endpoints return 503).
+type Deps struct {
+	Log         *slog.Logger
+	Store       *store.Store
+	Registry    *provider.Registry
+	Version     string
+	OpenAPISpec []byte
+	StaticFiles http.Handler
+	Boot        *boot.Handler
+	ISOs        *iso.Manager
+}
 
 // Server wires the HTTP routes to the application services.
 type Server struct {
@@ -26,23 +41,22 @@ type Server struct {
 	openAPISpec  []byte
 	staticFiles  http.Handler
 	boot         *boot.Handler
+	isos         *iso.Manager
 	loginLimiter *rateLimiter
 	handler      http.Handler
 }
 
-// New builds the API server. staticFiles serves the embedded frontend
-// and may be nil (API-only mode, used in tests); bootHandler mounts the
-// unauthenticated /boot/ surface and may also be nil. openAPISpec is the
-// raw OpenAPI document served at /api/v1/openapi.yaml.
-func New(log *slog.Logger, st *store.Store, reg *provider.Registry, version string, openAPISpec []byte, staticFiles http.Handler, bootHandler *boot.Handler) *Server {
+// New builds the API server from its dependencies.
+func New(d Deps) *Server {
 	s := &Server{
-		log:         log,
-		store:       st,
-		registry:    reg,
-		version:     version,
-		openAPISpec: openAPISpec,
-		staticFiles: staticFiles,
-		boot:        bootHandler,
+		log:         d.Log,
+		store:       d.Store,
+		registry:    d.Registry,
+		version:     d.Version,
+		openAPISpec: d.OpenAPISpec,
+		staticFiles: d.StaticFiles,
+		boot:        d.Boot,
+		isos:        d.ISOs,
 		// 5 attempts immediately, then one attempt every 2 seconds per
 		// client IP — brute-force protection on login (§29).
 		loginLimiter: newRateLimiter(5, 2*time.Second),
@@ -78,6 +92,12 @@ func (s *Server) buildRoutes() http.Handler {
 	mux.Handle("GET /api/v1/hosts/{id}", s.require(model.RoleViewer, s.handleGetHost))
 	mux.Handle("PUT /api/v1/hosts/{id}", s.require(model.RoleOperator, s.handleUpdateHost))
 	mux.Handle("DELETE /api/v1/hosts/{id}", s.require(model.RoleOperator, s.handleDeleteHost))
+
+	mux.Handle("GET /api/v1/isos", s.require(model.RoleViewer, s.handleListISOs))
+	mux.Handle("GET /api/v1/isos/{id}", s.require(model.RoleViewer, s.handleGetISO))
+	mux.Handle("POST /api/v1/isos/upload", s.require(model.RoleOperator, s.handleUploadISO))
+	mux.Handle("POST /api/v1/isos/scan", s.require(model.RoleOperator, s.handleScanISOs))
+	mux.Handle("DELETE /api/v1/isos/{id}", s.require(model.RoleOperator, s.handleDeleteISO))
 
 	mux.Handle("GET /api/v1/network/config", s.require(model.RoleViewer, s.handleGetNetworkConfig))
 	mux.Handle("PUT /api/v1/network/config", s.require(model.RoleAdmin, s.handlePutNetworkConfig))

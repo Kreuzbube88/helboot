@@ -21,6 +21,7 @@ tags:
   - name: providers
   - name: hosts
   - name: profiles
+  - name: isos
   - name: network
 
 paths:
@@ -340,6 +341,80 @@ paths:
                 items: { $ref: "#/components/schemas/ProfileVersion" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /isos:
+    get:
+      tags: [isos]
+      summary: List ISO images
+      responses:
+        "200":
+          description: All ISO records with analysis results
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ISOImage" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /isos/upload:
+    post:
+      tags: [isos]
+      summary: Upload an original ISO (operator)
+      description: >
+        Streaming multipart upload (single part named "file"). The image
+        is hashed, stored unmodified and analyzed against the provider
+        detection rules.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "201":
+          description: Stored and analyzed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ISOImage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { description: Filename already exists, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /isos/scan:
+    post:
+      tags: [isos]
+      summary: Index ISO files already in the ISO directory (operator)
+      description: For pre-existing shares mounted into the container.
+      responses:
+        "200":
+          description: Newly indexed images
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ISOImage" }
+
+  /isos/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [isos]
+      summary: Get an ISO record
+      responses:
+        "200":
+          description: The ISO record
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ISOImage" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [isos]
+      summary: Delete an ISO record and its file (operator)
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /network/config:
     get:
       tags: [network]
@@ -497,6 +572,22 @@ components:
         currentVersion: { type: integer }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    ISOImage:
+      type: object
+      properties:
+        id: { type: integer }
+        filename: { type: string }
+        provider: { type: string, description: Matched provider name, empty if unknown }
+        osName: { type: string }
+        version: { type: string }
+        arch: { type: string }
+        bootloader: { type: string, enum: ["", bios, uefi, hybrid] }
+        installMethod: { type: string }
+        sizeBytes: { type: integer }
+        sha256: { type: string }
+        status: { type: string, enum: [uploaded, analyzing, ready, unsupported] }
+        createdAt: { type: string, format: date-time }
 
     NetworkConfig:
       type: object
