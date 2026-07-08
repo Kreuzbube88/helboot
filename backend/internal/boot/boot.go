@@ -10,22 +10,35 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/kreuzbube88/helboot/backend/internal/iso"
 	"github.com/kreuzbube88/helboot/backend/internal/model"
 	"github.com/kreuzbube88/helboot/backend/internal/netutil"
+	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
 )
 
+// manifestType keeps install.go free of a direct provider import cycle
+// concern and documents the single point of coupling.
+type manifestType = *provider.Manifest
+
 // Handler implements the /boot/ HTTP surface.
 type Handler struct {
-	log       *slog.Logger
-	store     *store.Store
-	assetsDir string
+	log          *slog.Logger
+	store        *store.Store
+	registry     *provider.Registry
+	isos         *iso.Manager
+	assetsDir    string
+	providersDir string
 }
 
 // New creates the boot handler. assetsDir is the boot assets root; its
-// files are exposed read-only under /boot/assets/.
-func New(log *slog.Logger, st *store.Store, assetsDir string) *Handler {
-	return &Handler{log: log, store: st, assetsDir: assetsDir}
+// files are exposed read-only under /boot/assets/. providersDir is where
+// answer-file templates live.
+func New(log *slog.Logger, st *store.Store, reg *provider.Registry, isos *iso.Manager, assetsDir, providersDir string) *Handler {
+	return &Handler{
+		log: log, store: st, registry: reg, isos: isos,
+		assetsDir: assetsDir, providersDir: providersDir,
+	}
 }
 
 // Register mounts the boot routes on mux.
@@ -33,6 +46,11 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /boot/ipxe", h.handleScript)
 	mux.Handle("GET /boot/assets/",
 		http.StripPrefix("/boot/assets/", http.FileServer(http.Dir(h.assetsDir))))
+	mux.HandleFunc("GET /boot/isofile/{id}", h.handleISOFile)
+	mux.HandleFunc("GET /boot/iso/{id}/{path...}", h.handleISOContent)
+	mux.HandleFunc("GET /boot/answer/{token}", h.handleAnswerFile)
+	mux.HandleFunc("GET /boot/cloudinit/{token}/{file}", h.handleCloudInit)
+	mux.HandleFunc("POST /boot/report/{token}", h.handleReport)
 }
 
 // handleScript returns the per-machine iPXE script. iPXE requests it as
@@ -59,7 +77,7 @@ func (h *Handler) handleScript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, h.scriptFor(host))
+	fmt.Fprint(w, h.scriptFor(baseURL(r), host))
 }
 
 // discover records a previously unknown machine (§15). Failures are
@@ -80,10 +98,27 @@ func (h *Handler) discover(mac string, r *http.Request) *model.Host {
 	return created
 }
 
-// scriptFor renders the iPXE script for a host. Installation booting is
-// wired in by the installation queue (M4); until a host has queued
-// work it boots from its local disk.
-func (h *Handler) scriptFor(host *model.Host) string {
+// scriptFor renders the iPXE script for a host: queued installations
+// boot into the installer, discovered hosts get a hint, everything else
+// boots from local disk.
+func (h *Handler) scriptFor(baseURL string, host *model.Host) string {
+	ic, reason, err := h.loadInstallContext(host)
+	if err != nil {
+		h.log.Error("boot: install lookup failed", "mac", host.MAC, "error", err)
+		return messageScript("internal error, check the HELBOOT logs")
+	}
+	if ic != nil {
+		script := h.installScript(baseURL, ic)
+		if strings.Contains(script, "\nboot\n") {
+			h.markInstalling(ic)
+		}
+		return script
+	}
+	if reason != "" {
+		h.log.Warn("boot: installation not bootable", "mac", host.MAC, "reason", reason)
+		return messageScript(fmt.Sprintf("installation for %s is not bootable: %s", host.MAC, reason))
+	}
+
 	var b strings.Builder
 	b.WriteString("#!ipxe\n")
 	switch host.Status {

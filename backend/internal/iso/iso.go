@@ -246,21 +246,27 @@ func detectBootloader(img *iso9660.Image) string {
 	}
 }
 
-// fileExists walks the ISO directory tree for a /-separated path,
+// fileExists reports whether the /-separated path exists in the image.
+func fileExists(img *iso9660.Image, p string) bool {
+	_, ok := findFile(img, p)
+	return ok
+}
+
+// findFile walks the ISO directory tree for a /-separated path,
 // comparing names case-insensitively and ignoring ISO 9660 ";1" version
 // suffixes.
-func fileExists(img *iso9660.Image, p string) bool {
+func findFile(img *iso9660.Image, p string) (*iso9660.File, bool) {
 	current, err := img.RootDir()
 	if err != nil {
-		return false
+		return nil, false
 	}
 	for _, segment := range strings.Split(strings.Trim(p, "/"), "/") {
 		if !current.IsDir() {
-			return false
+			return nil, false
 		}
 		children, err := current.GetChildren()
 		if err != nil {
-			return false
+			return nil, false
 		}
 		var next *iso9660.File
 		for _, child := range children {
@@ -271,11 +277,45 @@ func fileExists(img *iso9660.Image, p string) bool {
 			}
 		}
 		if next == nil {
-			return false
+			return nil, false
 		}
 		current = next
 	}
-	return true
+	return current, true
+}
+
+// Path returns the on-disk location of a stored ISO.
+func (m *Manager) Path(filename string) string {
+	return filepath.Join(m.dir, filepath.Base(filename))
+}
+
+// isoFileReader streams one file from inside an ISO and closes the
+// underlying image file with it.
+type isoFileReader struct {
+	io.Reader
+	f *os.File
+}
+
+func (r *isoFileReader) Close() error { return r.f.Close() }
+
+// OpenFileInISO returns a reader for a single file inside a stored ISO,
+// used to serve kernels/initrds over HTTP without extracting anything.
+func (m *Manager) OpenFileInISO(isoFilename, innerPath string) (io.ReadCloser, int64, error) {
+	f, err := os.Open(m.Path(isoFilename))
+	if err != nil {
+		return nil, 0, err
+	}
+	img, err := iso9660.OpenImage(f)
+	if err != nil {
+		f.Close()
+		return nil, 0, fmt.Errorf("open image: %w", err)
+	}
+	file, ok := findFile(img, innerPath)
+	if !ok || file.IsDir() {
+		f.Close()
+		return nil, 0, os.ErrNotExist
+	}
+	return &isoFileReader{Reader: file.Reader(), f: f}, file.Size(), nil
 }
 
 func hashFile(path string) (string, error) {

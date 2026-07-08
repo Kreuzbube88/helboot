@@ -125,7 +125,9 @@ const (
 )
 
 // Installation links a host to a specific profile version, preserving
-// accurate history even when the profile changes later.
+// accurate history even when the profile changes later. Token scopes the
+// unauthenticated boot-time endpoints (answer file, status report) to
+// this one installation and is never exposed through the JSON API.
 type Installation struct {
 	ID               int64              `json:"id"`
 	HostID           int64              `json:"hostId"`
@@ -134,6 +136,7 @@ type Installation struct {
 	StartedAt        *time.Time         `json:"startedAt"`
 	FinishedAt       *time.Time         `json:"finishedAt"`
 	Log              string             `json:"log"`
+	Token            string             `json:"-"`
 	CreatedAt        time.Time          `json:"createdAt"`
 }
 

@@ -55,14 +55,15 @@ answer_file: {format: preseed}
 	}
 
 	st := store.New(sqlDB)
+	isoManager := iso.NewManager(log, t.TempDir(), st, registry)
 	server := New(Deps{
 		Log:         log,
 		Store:       st,
 		Registry:    registry,
 		Version:     "test",
 		OpenAPISpec: []byte("openapi: 3.1.0"),
-		Boot:        boot.New(log, st, t.TempDir()),
-		ISOs:        iso.NewManager(log, t.TempDir(), st, registry),
+		Boot:        boot.New(log, st, registry, isoManager, t.TempDir(), providersDir),
+		ISOs:        isoManager,
 	})
 	ts := httptest.NewServer(server.Handler())
 	t.Cleanup(ts.Close)

@@ -68,6 +68,7 @@ func run() error {
 		return err
 	}
 
+	isoManager := iso.NewManager(log, filepath.Join(cfg.DataDir, "isos"), st, registry)
 	server := apihttp.New(apihttp.Deps{
 		Log:         log,
 		Store:       st,
@@ -75,8 +76,8 @@ func run() error {
 		Version:     version,
 		OpenAPISpec: api.OpenAPISpec,
 		StaticFiles: web.Handler(),
-		Boot:        boot.New(log, st, cfg.AssetsPath()),
-		ISOs:        iso.NewManager(log, filepath.Join(cfg.DataDir, "isos"), st, registry),
+		Boot:        boot.New(log, st, registry, isoManager, cfg.AssetsPath(), cfg.ProvidersDir),
+		ISOs:        isoManager,
 	})
 	httpServer := &http.Server{
 		Addr:              cfg.HTTPAddr,

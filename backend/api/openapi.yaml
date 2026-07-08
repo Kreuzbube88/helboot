@@ -22,6 +22,7 @@ tags:
   - name: hosts
   - name: profiles
   - name: isos
+  - name: installations
   - name: network
 
 paths:
@@ -341,6 +342,68 @@ paths:
                 items: { $ref: "#/components/schemas/ProfileVersion" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /installations:
+    get:
+      tags: [installations]
+      summary: List the installation queue and history
+      responses:
+        "200":
+          description: All installations, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Installation" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [installations]
+      summary: Queue an installation (operator)
+      description: >
+        The next network boot of the host starts the installer. Pins the
+        profile's current version snapshot so later profile edits never
+        change what a queued host installs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hostId]
+              properties:
+                hostId: { type: integer }
+                profileId:
+                  type: [integer, "null"]
+                  description: Overrides the host's assigned profile.
+      responses:
+        "201":
+          description: Queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Installation" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { description: Host already has an active installation, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /installations/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [installations]
+      summary: Get an installation
+      responses:
+        "200":
+          description: The installation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Installation" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [installations]
+      summary: Cancel a waiting installation (operator)
+      responses:
+        "204": { description: Cancelled }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { description: Not cancellable (already running or finished), content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
   /isos:
     get:
       tags: [isos]
@@ -572,6 +635,18 @@ components:
         currentVersion: { type: integer }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    Installation:
+      type: object
+      properties:
+        id: { type: integer }
+        hostId: { type: integer }
+        profileVersionId: { type: integer }
+        status: { type: string, enum: [discovered, waiting, installing, success, error] }
+        startedAt: { type: [string, "null"], format: date-time }
+        finishedAt: { type: [string, "null"], format: date-time }
+        log: { type: string }
+        createdAt: { type: string, format: date-time }
 
     ISOImage:
       type: object

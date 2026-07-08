@@ -93,6 +93,11 @@ func (s *Server) buildRoutes() http.Handler {
 	mux.Handle("PUT /api/v1/hosts/{id}", s.require(model.RoleOperator, s.handleUpdateHost))
 	mux.Handle("DELETE /api/v1/hosts/{id}", s.require(model.RoleOperator, s.handleDeleteHost))
 
+	mux.Handle("GET /api/v1/installations", s.require(model.RoleViewer, s.handleListInstallations))
+	mux.Handle("POST /api/v1/installations", s.require(model.RoleOperator, s.handleCreateInstallation))
+	mux.Handle("GET /api/v1/installations/{id}", s.require(model.RoleViewer, s.handleGetInstallation))
+	mux.Handle("DELETE /api/v1/installations/{id}", s.require(model.RoleOperator, s.handleDeleteInstallation))
+
 	mux.Handle("GET /api/v1/isos", s.require(model.RoleViewer, s.handleListISOs))
 	mux.Handle("GET /api/v1/isos/{id}", s.require(model.RoleViewer, s.handleGetISO))
 	mux.Handle("POST /api/v1/isos/upload", s.require(model.RoleOperator, s.handleUploadISO))
