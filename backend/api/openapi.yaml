@@ -1,0 +1,478 @@
+openapi: 3.1.0
+info:
+  title: HELBOOT API
+  description: >
+    REST API of the HELBOOT provisioning engine. The web UI communicates
+    exclusively through this API; it is equally intended for automation.
+    Error responses always use the shared Error envelope whose `code` is a
+    stable identifier doubling as the i18n key.
+  version: 0.1.0
+  license:
+    name: AGPL-3.0-only
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: system
+  - name: setup
+  - name: auth
+  - name: providers
+  - name: hosts
+  - name: profiles
+
+paths:
+  /health:
+    get:
+      tags: [system]
+      summary: Liveness probe
+      security: []
+      responses:
+        "200":
+          description: Server is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+                  version: { type: string }
+
+  /system/info:
+    get:
+      tags: [system]
+      summary: System information
+      responses:
+        "200":
+          description: Version, setup state and network mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version: { type: string }
+                  setupCompleted: { type: boolean }
+                  networkMode: { type: string, enum: ["", proxy_dhcp, dhcp] }
+                  providers: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /setup/status:
+    get:
+      tags: [setup]
+      summary: First-run wizard state
+      security: []
+      responses:
+        "200":
+          description: Whether setup has been completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  completed: { type: boolean }
+
+  /setup:
+    post:
+      tags: [setup]
+      summary: Complete the first-run wizard
+      description: Unauthenticated by design, usable exactly once.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language, admin, network]
+              properties:
+                language: { type: string, enum: [en, de] }
+                admin:
+                  type: object
+                  required: [username, password]
+                  properties:
+                    username: { type: string, minLength: 3 }
+                    password: { type: string, minLength: 10 }
+                network:
+                  type: object
+                  required: [mode]
+                  properties:
+                    mode: { type: string, enum: [proxy_dhcp, dhcp] }
+      responses:
+        "201": { description: Setup completed }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { description: Setup was already completed, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Log in with local credentials
+      description: Rate-limited per client IP. Sets the session cookie.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionInfo" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { description: Rate limited, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Log out and destroy the session
+      responses:
+        "200": { description: Logged out }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Current user and CSRF token
+      responses:
+        "200":
+          description: Session info
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionInfo" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /providers:
+    get:
+      tags: [providers]
+      summary: List provider manifests
+      description: >
+        The UI derives all OS-specific options from these capability
+        declarations; nothing is hardcoded per OS.
+      responses:
+        "200":
+          description: All loaded providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Provider" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /providers/{name}:
+    get:
+      tags: [providers]
+      summary: Get one provider manifest
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The provider manifest
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Provider" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /hosts:
+    get:
+      tags: [hosts]
+      summary: List hosts
+      responses:
+        "200":
+          description: All hosts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Host" }
+    post:
+      tags: [hosts]
+      summary: Register a host (operator)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Host" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { description: MAC already registered, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /hosts/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [hosts]
+      summary: Get a host
+      responses:
+        "200":
+          description: The host
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Host" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [hosts]
+      summary: Update a host (operator)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Host" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [hosts]
+      summary: Delete a host (operator)
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /profiles:
+    get:
+      tags: [profiles]
+      summary: List profiles
+      responses:
+        "200":
+          description: All profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Profile" }
+    post:
+      tags: [profiles]
+      summary: Create a profile (operator)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, provider]
+              properties:
+                name: { type: string }
+                provider: { type: string }
+                isoId: { type: [integer, "null"] }
+                config: { type: object, description: Provider-shaped configuration document }
+      responses:
+        "201":
+          description: Created with version 1
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /profiles/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [profiles]
+      summary: Get a profile
+      responses:
+        "200":
+          description: The profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [profiles]
+      summary: Update a profile (operator)
+      description: Sending `config` appends a new immutable version.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                isoId: { type: [integer, "null"] }
+                config: { type: object }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [profiles]
+      summary: Delete a profile (operator)
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /profiles/{id}/versions:
+    get:
+      tags: [profiles]
+      summary: List a profile's version snapshots
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: All versions, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ProfileVersion" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: helboot_session
+    csrfToken:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Required on all mutating requests.
+
+  responses:
+    Unauthorized:
+      description: Authentication required or invalid
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    BadRequest:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Stable identifier, used as the frontend i18n key.
+            message:
+              type: string
+              description: English fallback message.
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        role: { type: string, enum: [admin, operator, viewer] }
+        locale: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    SessionInfo:
+      type: object
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        csrfToken: { type: string }
+
+    Provider:
+      type: object
+      properties:
+        name: { type: string }
+        displayName: { type: string }
+        family: { type: string }
+        capabilities:
+          type: object
+          additionalProperties: { type: boolean }
+        answerFile:
+          type: object
+          properties:
+            format: { type: string }
+            template: { type: string }
+        detection:
+          type: object
+          properties:
+            volumeIdPatterns: { type: array, items: { type: string } }
+            files: { type: array, items: { type: string } }
+        boot:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              kernel: { type: string }
+              initrd: { type: array, items: { type: string } }
+              cmdline: { type: string }
+              requires: { type: array, items: { type: string } }
+        notes: { type: string }
+
+    HostRequest:
+      type: object
+      required: [mac]
+      properties:
+        mac: { type: string, description: Any common notation; normalized to lowercase colon form. }
+        hostname: { type: string }
+        vendor: { type: string }
+        model: { type: string }
+        serial: { type: string }
+        assetId: { type: string }
+        tags: { type: array, items: { type: string } }
+        firmware: { type: string, enum: ["", bios, uefi] }
+        arch: { type: string }
+        profileId: { type: [integer, "null"] }
+
+    Host:
+      allOf:
+        - $ref: "#/components/schemas/HostRequest"
+        - type: object
+          properties:
+            id: { type: integer }
+            status: { type: string, enum: [discovered, ready, installing, error] }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    Profile:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        provider: { type: string }
+        isoId: { type: [integer, "null"] }
+        currentVersion: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ProfileVersion:
+      type: object
+      properties:
+        id: { type: integer }
+        profileId: { type: integer }
+        version: { type: integer }
+        config: { type: string, description: JSON document as string }
+        createdAt: { type: string, format: date-time }
+
+security:
+  - sessionCookie: []

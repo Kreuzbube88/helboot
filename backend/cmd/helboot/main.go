@@ -1,0 +1,107 @@
+// Command helboot is the HELBOOT server: one binary that supervises the
+// HTTP API/UI and, in later milestones, the DHCP/ProxyDHCP and TFTP boot
+// services (ADR-0009).
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+	"time"
+
+	"github.com/kreuzbube88/helboot/backend/api"
+	apihttp "github.com/kreuzbube88/helboot/backend/internal/api"
+	"github.com/kreuzbube88/helboot/backend/internal/config"
+	"github.com/kreuzbube88/helboot/backend/internal/db"
+	"github.com/kreuzbube88/helboot/backend/internal/logging"
+	"github.com/kreuzbube88/helboot/backend/internal/provider"
+	"github.com/kreuzbube88/helboot/backend/internal/store"
+	"github.com/kreuzbube88/helboot/backend/internal/web"
+)
+
+// version is overridden at build time via -ldflags "-X main.version=...".
+var version = "dev"
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintln(os.Stderr, "helboot:", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	cfg := config.FromEnv()
+	log := logging.New(os.Stdout, cfg.LogLevel, cfg.LogFormat)
+	log.Info("starting HELBOOT", "version", version)
+
+	for _, dir := range []string{cfg.DataDir, filepath.Join(cfg.DataDir, "isos"), filepath.Join(cfg.DataDir, "logs")} {
+		if err := os.MkdirAll(dir, 0o750); err != nil {
+			return fmt.Errorf("create data directory %s: %w", dir, err)
+		}
+	}
+
+	sqlDB, err := db.Open(cfg.DatabasePath())
+	if err != nil {
+		return err
+	}
+	defer sqlDB.Close()
+	if err := db.Migrate(sqlDB); err != nil {
+		return fmt.Errorf("migrate database: %w", err)
+	}
+	st := store.New(sqlDB)
+
+	registry, err := provider.LoadDir(cfg.ProvidersDir, log)
+	if err != nil {
+		return err
+	}
+
+	server := apihttp.New(log, st, registry, version, api.OpenAPISpec, web.Handler())
+	httpServer := &http.Server{
+		Addr:              cfg.HTTPAddr,
+		Handler:           server.Handler(),
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	// Housekeeping: purge expired sessions periodically.
+	go func() {
+		ticker := time.NewTicker(time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if err := st.DeleteExpiredSessions(time.Now()); err != nil {
+					log.Error("session cleanup failed", "error", err)
+				}
+			}
+		}
+	}()
+
+	errCh := make(chan error, 1)
+	go func() {
+		log.Info("http server listening", "addr", cfg.HTTPAddr)
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- err
+		}
+	}()
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+	}
+
+	log.Info("shutting down")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return httpServer.Shutdown(shutdownCtx)
+}
