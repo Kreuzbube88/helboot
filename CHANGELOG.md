@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Boot network services running supervised inside the single binary:
+  TFTP, ProxyDHCP (Mode A, coexists with existing routers) and an
+  authoritative DHCP server (Mode B) with persisted leases;
+  architecture-aware iPXE bootstrapping and a network configuration API.
+- Host discovery: unknown machines that PXE-boot appear automatically
+  as "discovered" hosts.
+- ISO management: streaming upload, SHA-256 hashing, automatic OS
+  detection against provider rules, directory scan for existing shares,
+  and HTTP serving of ISO contents (kernels/initrds) without modifying
+  the original images.
+- Installation queue: pinned profile versions, full iPXE boot chain,
+  rendered answer files and cloud-init seeds, token-scoped installer
+  status reporting, per-host history.
+- Backup export/import (staged restore on restart) and an API log
+  viewer backed by a structured log ring buffer.
+- Frontend pages for ISOs (upload/scan), installations, logs and
+  settings (network mode, DHCP range, backup) in English and German.
+- Unraid template icon.
+
 - Project architecture, component model and Architecture Decision Records.
 - Go backend scaffolding: configuration, structured logging, SQLite with
   embedded migrations, session-based authentication with Argon2id password

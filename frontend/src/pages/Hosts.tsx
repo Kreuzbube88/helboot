@@ -9,6 +9,7 @@ export function Hosts() {
   const [hosts, setHosts] = useState<Host[] | null>(null)
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [error, setError] = useState<unknown>(null)
+  const [notice, setNotice] = useState('')
   const [adding, setAdding] = useState(false)
 
   function reload() {
@@ -33,6 +34,17 @@ export function Hosts() {
     }
   }
 
+  async function queueInstall(host: Host) {
+    setNotice('')
+    try {
+      await api.post('/installations', { hostId: host.id })
+      setNotice(t('installations.queued'))
+      reload()
+    } catch (err) {
+      setError(err)
+    }
+  }
+
   const statusLabel: Record<Host['status'], string> = {
     discovered: t('hosts.statusDiscovered'),
     ready: t('hosts.statusReady'),
@@ -49,6 +61,7 @@ export function Hosts() {
         </button>
       </div>
       <ErrorMessage error={error} />
+      {notice && <p className="muted">{notice}</p>}
       {adding && (
         <HostForm
           profiles={profiles}
@@ -85,6 +98,9 @@ export function Hosts() {
                   <span className="badge">{statusLabel[h.status]}</span>
                 </td>
                 <td>
+                  {h.profileId != null && h.status !== 'installing' && (
+                    <button onClick={() => queueInstall(h)}>{t('installations.queue')}</button>
+                  )}{' '}
                   <button className="danger" onClick={() => remove(h)}>
                     {t('common.delete')}
                   </button>

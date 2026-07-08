@@ -6,9 +6,12 @@ import type { SessionInfo, User } from './api/types'
 import { Layout } from './components/Layout'
 import { Dashboard } from './pages/Dashboard'
 import { Hosts } from './pages/Hosts'
+import { Installations } from './pages/Installations'
 import { Isos } from './pages/Isos'
 import { Login } from './pages/Login'
+import { Logs } from './pages/Logs'
 import { Profiles } from './pages/Profiles'
+import { Settings } from './pages/Settings'
 import { SetupWizard } from './pages/SetupWizard'
 
 type Boot =
@@ -57,6 +60,9 @@ export default function App() {
           <Route path="hosts" element={<Hosts />} />
           <Route path="profiles" element={<Profiles />} />
           <Route path="isos" element={<Isos />} />
+          <Route path="installations" element={<Installations />} />
+          <Route path="logs" element={<Logs />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

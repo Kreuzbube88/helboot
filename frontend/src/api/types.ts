@@ -59,3 +59,51 @@ export interface SystemInfo {
   networkMode: '' | 'proxy_dhcp' | 'dhcp'
   providers: number
 }
+
+export interface ISOImage {
+  id: number
+  filename: string
+  provider: string
+  osName: string
+  version: string
+  arch: string
+  bootloader: '' | 'bios' | 'uefi' | 'hybrid'
+  installMethod: string
+  sizeBytes: number
+  sha256: string
+  status: 'uploaded' | 'analyzing' | 'ready' | 'unsupported'
+  createdAt: string
+}
+
+export type InstallationStatus = 'discovered' | 'waiting' | 'installing' | 'success' | 'error'
+
+export interface Installation {
+  id: number
+  hostId: number
+  profileVersionId: number
+  status: InstallationStatus
+  startedAt: string | null
+  finishedAt: string | null
+  log: string
+  createdAt: string
+}
+
+export interface LogEntry {
+  time: string
+  level: string
+  message: string
+  attrs?: Record<string, string>
+}
+
+export interface NetworkConfig {
+  mode: 'proxy_dhcp' | 'dhcp'
+  serverIp: string
+  dhcp: {
+    rangeStart: string
+    rangeEnd: string
+    subnetMask: string
+    gateway: string
+    dns: string
+    leaseMinutes: number
+  }
+}

@@ -48,9 +48,27 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return data as T
 }
 
+/** Multipart upload of a single file under the field name "file". */
+async function upload<T>(path: string, file: File): Promise<T> {
+  const form = new FormData()
+  form.append('file', file)
+  const resp = await fetch(`/api/v1${path}`, {
+    method: 'POST',
+    headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : undefined,
+    body: form,
+    credentials: 'same-origin',
+  })
+  const data = await resp.json().catch(() => null)
+  if (!resp.ok) {
+    throw new ApiError(resp.status, data?.error?.code ?? 'internal', data?.error?.message ?? resp.statusText)
+  }
+  return data as T
+}
+
 export const api = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   delete: <T = void>(path: string) => request<T>('DELETE', path),
+  upload,
 }

@@ -8,6 +8,9 @@
     "hosts": "Hosts",
     "profiles": "Profiles",
     "isos": "ISO images",
+    "installations": "Installations",
+    "logs": "Logs",
+    "settings": "Settings",
     "logout": "Log out"
   },
   "common": {
@@ -96,7 +99,66 @@
   "isos": {
     "title": "ISO images",
     "empty": "No ISO images yet. Upload an original ISO — HELBOOT detects the operating system automatically.",
-    "comingSoon": "ISO upload and automatic analysis are under development."
+    "upload": "Upload ISO",
+    "uploading": "Uploading… this can take a while for large images.",
+    "scan": "Scan directory",
+    "scanned": "{{count}} new image(s) indexed.",
+    "filename": "Filename",
+    "os": "Operating system",
+    "bootloader": "Bootloader",
+    "size": "Size",
+    "status": "Status",
+    "statusReady": "Ready",
+    "statusUnsupported": "Not recognized",
+    "statusUploaded": "Uploaded",
+    "statusAnalyzing": "Analyzing",
+    "confirmDelete": "Delete this ISO record and its file?"
+  },
+  "installations": {
+    "title": "Installations",
+    "empty": "No installations yet. Queue one from the Hosts page.",
+    "host": "Host",
+    "status": "Status",
+    "created": "Queued",
+    "started": "Started",
+    "finished": "Finished",
+    "statusWaiting": "Waiting for boot",
+    "statusInstalling": "Installing",
+    "statusSuccess": "Success",
+    "statusError": "Error",
+    "statusDiscovered": "Discovered",
+    "cancel": "Cancel",
+    "confirmCancel": "Cancel this queued installation?",
+    "queue": "Install",
+    "queued": "Installation queued — the machine will install on its next network boot."
+  },
+  "logs": {
+    "title": "Logs",
+    "level": "Level",
+    "refresh": "Refresh",
+    "time": "Time",
+    "message": "Message",
+    "empty": "No log entries at this level."
+  },
+  "settings": {
+    "title": "Settings",
+    "network": "Boot network",
+    "mode": "Network mode",
+    "serverIp": "Server IP address",
+    "serverIpHint": "Address PXE clients use to reach HELBOOT. Leave empty to auto-detect.",
+    "rangeStart": "DHCP range start",
+    "rangeEnd": "DHCP range end",
+    "subnetMask": "Subnet mask",
+    "gateway": "Gateway",
+    "dns": "DNS servers",
+    "dnsHint": "Comma-separated",
+    "leaseMinutes": "Lease duration (minutes)",
+    "saved": "Saved. Restart HELBOOT to apply the network changes.",
+    "backup": "Backup",
+    "backupExport": "Download backup",
+    "backupImport": "Restore backup",
+    "backupImportStaged": "Backup staged. Restart HELBOOT to apply the restore.",
+    "backupHint": "The backup contains the database: settings, users, hosts, profiles and history. ISO files are not included."
   },
   "errors": {
     "internal": "Internal server error",
@@ -135,6 +197,34 @@
     },
     "provider": {
       "not_found": "Unknown provider"
+    },
+    "iso": {
+      "unavailable": "ISO management is not available",
+      "invalid_upload": "Invalid upload",
+      "invalid_filename": "The filename must be simple and end in .iso or .img",
+      "exists": "An ISO with this filename already exists"
+    },
+    "installation": {
+      "unknown_host": "Unknown host",
+      "unknown_profile": "Unknown profile",
+      "no_profile": "The host has no profile assigned",
+      "already_active": "This host already has an active installation",
+      "not_cancellable": "Only waiting installations can be cancelled"
+    },
+    "network": {
+      "invalid_mode": "Invalid network mode",
+      "invalid_ip": "Invalid IP address",
+      "invalid_range": "DHCP mode requires a valid address range",
+      "invalid_lease": "Invalid lease duration"
+    },
+    "logs": {
+      "unavailable": "Logs are not available",
+      "invalid_limit": "Invalid limit"
+    },
+    "backup": {
+      "unavailable": "Backup is not available",
+      "invalid_upload": "Invalid upload",
+      "invalid_archive": "This is not a valid HELBOOT backup archive"
     }
   }
 }

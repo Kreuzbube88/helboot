@@ -8,6 +8,9 @@
     "hosts": "Hosts",
     "profiles": "Profile",
     "isos": "ISO-Abbilder",
+    "installations": "Installationen",
+    "logs": "Protokolle",
+    "settings": "Einstellungen",
     "logout": "Abmelden"
   },
   "common": {
@@ -96,7 +99,66 @@
   "isos": {
     "title": "ISO-Abbilder",
     "empty": "Noch keine ISO-Abbilder. Laden Sie ein Original-ISO hoch — HELBOOT erkennt das Betriebssystem automatisch.",
-    "comingSoon": "ISO-Upload und automatische Analyse befinden sich in Entwicklung."
+    "upload": "ISO hochladen",
+    "uploading": "Wird hochgeladen… bei großen Abbildern kann das dauern.",
+    "scan": "Verzeichnis durchsuchen",
+    "scanned": "{{count}} neue(s) Abbild(er) erfasst.",
+    "filename": "Dateiname",
+    "os": "Betriebssystem",
+    "bootloader": "Bootloader",
+    "size": "Größe",
+    "status": "Status",
+    "statusReady": "Bereit",
+    "statusUnsupported": "Nicht erkannt",
+    "statusUploaded": "Hochgeladen",
+    "statusAnalyzing": "Wird analysiert",
+    "confirmDelete": "Diesen ISO-Eintrag samt Datei löschen?"
+  },
+  "installations": {
+    "title": "Installationen",
+    "empty": "Noch keine Installationen. Planen Sie eine über die Hosts-Seite.",
+    "host": "Host",
+    "status": "Status",
+    "created": "Geplant",
+    "started": "Gestartet",
+    "finished": "Abgeschlossen",
+    "statusWaiting": "Wartet auf Boot",
+    "statusInstalling": "Installiert",
+    "statusSuccess": "Erfolgreich",
+    "statusError": "Fehler",
+    "statusDiscovered": "Entdeckt",
+    "cancel": "Abbrechen",
+    "confirmCancel": "Diese geplante Installation abbrechen?",
+    "queue": "Installieren",
+    "queued": "Installation geplant — das Gerät installiert beim nächsten Netzwerkstart."
+  },
+  "logs": {
+    "title": "Protokolle",
+    "level": "Stufe",
+    "refresh": "Aktualisieren",
+    "time": "Zeit",
+    "message": "Meldung",
+    "empty": "Keine Protokolleinträge auf dieser Stufe."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "network": "Boot-Netzwerk",
+    "mode": "Netzwerkmodus",
+    "serverIp": "Server-IP-Adresse",
+    "serverIpHint": "Adresse, über die PXE-Clients HELBOOT erreichen. Leer lassen für automatische Erkennung.",
+    "rangeStart": "DHCP-Bereich Anfang",
+    "rangeEnd": "DHCP-Bereich Ende",
+    "subnetMask": "Subnetzmaske",
+    "gateway": "Gateway",
+    "dns": "DNS-Server",
+    "dnsHint": "Kommagetrennt",
+    "leaseMinutes": "Lease-Dauer (Minuten)",
+    "saved": "Gespeichert. Starten Sie HELBOOT neu, um die Netzwerkänderungen zu übernehmen.",
+    "backup": "Sicherung",
+    "backupExport": "Sicherung herunterladen",
+    "backupImport": "Sicherung wiederherstellen",
+    "backupImportStaged": "Sicherung vorbereitet. Starten Sie HELBOOT neu, um die Wiederherstellung anzuwenden.",
+    "backupHint": "Die Sicherung enthält die Datenbank: Einstellungen, Benutzer, Hosts, Profile und Historie. ISO-Dateien sind nicht enthalten."
   },
   "errors": {
     "internal": "Interner Serverfehler",
@@ -135,6 +197,34 @@
     },
     "provider": {
       "not_found": "Unbekannter Provider"
+    },
+    "iso": {
+      "unavailable": "ISO-Verwaltung ist nicht verfügbar",
+      "invalid_upload": "Ungültiger Upload",
+      "invalid_filename": "Der Dateiname muss einfach sein und auf .iso oder .img enden",
+      "exists": "Ein ISO mit diesem Dateinamen existiert bereits"
+    },
+    "installation": {
+      "unknown_host": "Unbekannter Host",
+      "unknown_profile": "Unbekanntes Profil",
+      "no_profile": "Dem Host ist kein Profil zugewiesen",
+      "already_active": "Dieser Host hat bereits eine aktive Installation",
+      "not_cancellable": "Nur wartende Installationen können abgebrochen werden"
+    },
+    "network": {
+      "invalid_mode": "Ungültiger Netzwerkmodus",
+      "invalid_ip": "Ungültige IP-Adresse",
+      "invalid_range": "Der DHCP-Modus benötigt einen gültigen Adressbereich",
+      "invalid_lease": "Ungültige Lease-Dauer"
+    },
+    "logs": {
+      "unavailable": "Protokolle sind nicht verfügbar",
+      "invalid_limit": "Ungültiges Limit"
+    },
+    "backup": {
+      "unavailable": "Sicherung ist nicht verfügbar",
+      "invalid_upload": "Ungültiger Upload",
+      "invalid_archive": "Dies ist kein gültiges HELBOOT-Sicherungsarchiv"
     }
   }
 }

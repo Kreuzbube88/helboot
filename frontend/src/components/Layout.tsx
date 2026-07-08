@@ -26,6 +26,9 @@ export function Layout({ user, onLogout }: { user: User; onLogout: () => void })
           <NavLink to="/hosts">{t('nav.hosts')}</NavLink>
           <NavLink to="/profiles">{t('nav.profiles')}</NavLink>
           <NavLink to="/isos">{t('nav.isos')}</NavLink>
+          <NavLink to="/installations">{t('nav.installations')}</NavLink>
+          <NavLink to="/logs">{t('nav.logs')}</NavLink>
+          <NavLink to="/settings">{t('nav.settings')}</NavLink>
         </nav>
         <LanguageSwitcher />
         <div className="muted">{user.username}</div>
