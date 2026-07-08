@@ -60,6 +60,16 @@ With host networking make sure no other service occupies these ports
 | `HELBOOT_LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
 | `HELBOOT_LOG_FORMAT` | `json` | `json` / `text` |
 
+## Published images
+
+Images are built by two **manually triggered** GitHub Actions workflows
+(Actions tab → select workflow → *Run workflow*):
+
+| Workflow | Tag(s) | Purpose |
+| -------- | ------ | ------- |
+| *Docker dev build* | `:dev` | Builds the current main, smoke-tests the container (health + setup endpoint) and pushes it for testing. Version string: `dev-<commit>`. |
+| *Docker release build (latest)* | `:<version>` + `:latest` | Release build. The version (e.g. `1.0.0`) is the single manual input; the application reports exactly this version, the multi-arch image (amd64/arm64) is pushed, and the git tag `v<version>` is created. Existing versions are never overwritten. |
+
 ## Building locally
 
 ```bash

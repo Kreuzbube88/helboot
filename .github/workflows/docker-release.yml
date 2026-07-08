@@ -1,0 +1,88 @@
+name: Docker release build (latest)
+
+# Manually triggered only. The version is the single manual input
+# (e.g. 1.0.0 for the initial release). The workflow:
+#   1. validates the version and refuses to overwrite an existing release
+#   2. builds the multi-arch image with the application version set to
+#      exactly this input (visible in the UI and /api/v1/health)
+#   3. pushes ghcr.io/kreuzbube88/helboot:<version> and :latest
+#   4. creates and pushes the git tag v<version> so the release commit
+#      stays traceable
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (semver, e.g. 1.0.0) — without leading v"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  IMAGE: ghcr.io/kreuzbube88/helboot
+
+jobs:
+  release:
+    name: Build and push :latest + version tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history so the tag-exists check sees every release tag.
+          fetch-depth: 0
+
+      - name: Validate version
+        run: |
+          v="${{ inputs.version }}"
+          if ! echo "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$v' is not a semantic version (expected e.g. 1.0.0)"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/v$v" >/dev/null; then
+            echo "::error::tag v$v already exists — releases are immutable"
+            exit 1
+          fi
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+          build-args: |
+            VERSION=${{ env.VERSION }}
+
+      - name: Create release tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "HELBOOT $VERSION"
+          git push origin "v$VERSION"
+
+      - name: Summary
+        run: |
+          {
+            echo "## Release $VERSION published"
+            echo ""
+            echo "- Image: \`$IMAGE:$VERSION\` and \`$IMAGE:latest\` (linux/amd64, linux/arm64)"
+            echo "- Application version: \`$VERSION\`"
+            echo "- Git tag: \`v$VERSION\`"
+            echo "- Pull: \`docker pull $IMAGE:latest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
