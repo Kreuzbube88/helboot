@@ -1,0 +1,140 @@
+{
+  "app": {
+    "title": "HELBOOT",
+    "tagline": "Provisioning engine for homelabs"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "hosts": "Hosts",
+    "profiles": "Profiles",
+    "isos": "ISO images",
+    "logout": "Log out"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "actions": "Actions",
+    "language": "Language",
+    "yes": "Yes",
+    "no": "No",
+    "none": "None"
+  },
+  "login": {
+    "title": "Sign in",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in"
+  },
+  "setup": {
+    "title": "Welcome to HELBOOT",
+    "intro": "Let's set up your provisioning server in a few steps.",
+    "stepLanguage": "Language",
+    "stepAdmin": "Administrator account",
+    "stepNetwork": "Network",
+    "stepSummary": "Summary",
+    "adminUsername": "Administrator username",
+    "adminPassword": "Password",
+    "adminPasswordHint": "At least 10 characters.",
+    "networkQuestion": "Does your network already have a DHCP server (e.g. your router)?",
+    "networkProxy": "Yes — HELBOOT works alongside it (ProxyDHCP)",
+    "networkProxyHint": "Recommended. No changes to your existing network.",
+    "networkDhcp": "No — HELBOOT provides DHCP itself",
+    "networkDhcpHint": "For isolated lab networks without a DHCP server.",
+    "summaryIntro": "Please review your settings:",
+    "summaryLanguage": "Language",
+    "summaryAdmin": "Administrator",
+    "summaryNetwork": "Network mode",
+    "modeProxyDhcp": "ProxyDHCP (existing DHCP server)",
+    "modeDhcp": "HELBOOT DHCP"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "hosts": "Hosts",
+    "profiles": "Profiles",
+    "providers": "Providers",
+    "version": "Version",
+    "networkMode": "Network mode"
+  },
+  "hosts": {
+    "title": "Hosts",
+    "empty": "No hosts yet. Register a machine by its MAC address or wait for network discovery.",
+    "add": "Add host",
+    "mac": "MAC address",
+    "hostname": "Hostname",
+    "vendor": "Vendor",
+    "model": "Model",
+    "serial": "Serial number",
+    "assetId": "Asset ID",
+    "tags": "Tags",
+    "tagsHint": "Comma-separated",
+    "firmware": "Firmware",
+    "arch": "Architecture",
+    "profile": "Profile",
+    "status": "Status",
+    "statusDiscovered": "Discovered",
+    "statusReady": "Ready",
+    "statusInstalling": "Installing",
+    "statusError": "Error",
+    "confirmDelete": "Delete this host?"
+  },
+  "profiles": {
+    "title": "Installation profiles",
+    "empty": "No profiles yet. A profile describes one automated installation.",
+    "add": "Create profile",
+    "name": "Name",
+    "provider": "Operating system",
+    "version": "Version",
+    "confirmDelete": "Delete this profile and all its versions?"
+  },
+  "isos": {
+    "title": "ISO images",
+    "empty": "No ISO images yet. Upload an original ISO — HELBOOT detects the operating system automatically.",
+    "comingSoon": "ISO upload and automatic analysis are under development."
+  },
+  "errors": {
+    "internal": "Internal server error",
+    "api": {
+      "not_found": "Unknown API endpoint"
+    },
+    "not_found": "Resource not found",
+    "validation": {
+      "invalid_json": "Invalid request",
+      "invalid_id": "Invalid identifier"
+    },
+    "auth": {
+      "unauthorized": "Please sign in",
+      "invalid_credentials": "Invalid username or password",
+      "session_expired": "Your session has expired, please sign in again",
+      "forbidden": "You do not have permission for this action",
+      "csrf": "Security token invalid, please reload the page",
+      "rate_limited": "Too many attempts — please wait a moment"
+    },
+    "setup": {
+      "already_completed": "Setup has already been completed",
+      "invalid_language": "Unsupported language",
+      "invalid_username": "Username must have at least 3 characters",
+      "weak_password": "Password must have at least 10 characters",
+      "invalid_network_mode": "Invalid network mode"
+    },
+    "host": {
+      "invalid_mac": "Invalid MAC address",
+      "invalid_firmware": "Invalid firmware type",
+      "mac_exists": "A host with this MAC address already exists"
+    },
+    "profile": {
+      "invalid_name": "Profile name is required",
+      "unknown_provider": "Unknown operating system",
+      "invalid_config": "Invalid profile configuration"
+    },
+    "provider": {
+      "not_found": "Unknown provider"
+    }
+  }
+}

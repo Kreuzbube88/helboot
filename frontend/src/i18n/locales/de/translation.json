@@ -1,0 +1,140 @@
+{
+  "app": {
+    "title": "HELBOOT",
+    "tagline": "Provisioning-Engine für Homelabs"
+  },
+  "nav": {
+    "dashboard": "Übersicht",
+    "hosts": "Hosts",
+    "profiles": "Profile",
+    "isos": "ISO-Abbilder",
+    "logout": "Abmelden"
+  },
+  "common": {
+    "loading": "Wird geladen…",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "finish": "Fertigstellen",
+    "actions": "Aktionen",
+    "language": "Sprache",
+    "yes": "Ja",
+    "no": "Nein",
+    "none": "Keine"
+  },
+  "login": {
+    "title": "Anmelden",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "submit": "Anmelden"
+  },
+  "setup": {
+    "title": "Willkommen bei HELBOOT",
+    "intro": "Richten wir Ihren Provisioning-Server in wenigen Schritten ein.",
+    "stepLanguage": "Sprache",
+    "stepAdmin": "Administrator-Konto",
+    "stepNetwork": "Netzwerk",
+    "stepSummary": "Zusammenfassung",
+    "adminUsername": "Administrator-Benutzername",
+    "adminPassword": "Passwort",
+    "adminPasswordHint": "Mindestens 10 Zeichen.",
+    "networkQuestion": "Gibt es in Ihrem Netzwerk bereits einen DHCP-Server (z. B. Ihren Router)?",
+    "networkProxy": "Ja — HELBOOT arbeitet parallel dazu (ProxyDHCP)",
+    "networkProxyHint": "Empfohlen. Keine Änderungen an Ihrem bestehenden Netzwerk.",
+    "networkDhcp": "Nein — HELBOOT übernimmt DHCP selbst",
+    "networkDhcpHint": "Für isolierte Labornetze ohne DHCP-Server.",
+    "summaryIntro": "Bitte prüfen Sie Ihre Einstellungen:",
+    "summaryLanguage": "Sprache",
+    "summaryAdmin": "Administrator",
+    "summaryNetwork": "Netzwerkmodus",
+    "modeProxyDhcp": "ProxyDHCP (vorhandener DHCP-Server)",
+    "modeDhcp": "HELBOOT-DHCP"
+  },
+  "dashboard": {
+    "title": "Übersicht",
+    "hosts": "Hosts",
+    "profiles": "Profile",
+    "providers": "Provider",
+    "version": "Version",
+    "networkMode": "Netzwerkmodus"
+  },
+  "hosts": {
+    "title": "Hosts",
+    "empty": "Noch keine Hosts. Registrieren Sie ein Gerät über seine MAC-Adresse oder warten Sie auf die Netzwerk-Erkennung.",
+    "add": "Host hinzufügen",
+    "mac": "MAC-Adresse",
+    "hostname": "Hostname",
+    "vendor": "Hersteller",
+    "model": "Modell",
+    "serial": "Seriennummer",
+    "assetId": "Asset-ID",
+    "tags": "Tags",
+    "tagsHint": "Kommagetrennt",
+    "firmware": "Firmware",
+    "arch": "Architektur",
+    "profile": "Profil",
+    "status": "Status",
+    "statusDiscovered": "Entdeckt",
+    "statusReady": "Bereit",
+    "statusInstalling": "Installiert",
+    "statusError": "Fehler",
+    "confirmDelete": "Diesen Host löschen?"
+  },
+  "profiles": {
+    "title": "Installationsprofile",
+    "empty": "Noch keine Profile. Ein Profil beschreibt eine automatisierte Installation.",
+    "add": "Profil erstellen",
+    "name": "Name",
+    "provider": "Betriebssystem",
+    "version": "Version",
+    "confirmDelete": "Dieses Profil mit allen Versionen löschen?"
+  },
+  "isos": {
+    "title": "ISO-Abbilder",
+    "empty": "Noch keine ISO-Abbilder. Laden Sie ein Original-ISO hoch — HELBOOT erkennt das Betriebssystem automatisch.",
+    "comingSoon": "ISO-Upload und automatische Analyse befinden sich in Entwicklung."
+  },
+  "errors": {
+    "internal": "Interner Serverfehler",
+    "api": {
+      "not_found": "Unbekannter API-Endpunkt"
+    },
+    "not_found": "Ressource nicht gefunden",
+    "validation": {
+      "invalid_json": "Ungültige Anfrage",
+      "invalid_id": "Ungültige Kennung"
+    },
+    "auth": {
+      "unauthorized": "Bitte melden Sie sich an",
+      "invalid_credentials": "Ungültiger Benutzername oder ungültiges Passwort",
+      "session_expired": "Ihre Sitzung ist abgelaufen, bitte melden Sie sich erneut an",
+      "forbidden": "Sie haben keine Berechtigung für diese Aktion",
+      "csrf": "Sicherheitstoken ungültig, bitte laden Sie die Seite neu",
+      "rate_limited": "Zu viele Versuche — bitte warten Sie einen Moment"
+    },
+    "setup": {
+      "already_completed": "Die Einrichtung wurde bereits abgeschlossen",
+      "invalid_language": "Nicht unterstützte Sprache",
+      "invalid_username": "Der Benutzername muss mindestens 3 Zeichen haben",
+      "weak_password": "Das Passwort muss mindestens 10 Zeichen haben",
+      "invalid_network_mode": "Ungültiger Netzwerkmodus"
+    },
+    "host": {
+      "invalid_mac": "Ungültige MAC-Adresse",
+      "invalid_firmware": "Ungültiger Firmware-Typ",
+      "mac_exists": "Ein Host mit dieser MAC-Adresse existiert bereits"
+    },
+    "profile": {
+      "invalid_name": "Der Profilname ist erforderlich",
+      "unknown_provider": "Unbekanntes Betriebssystem",
+      "invalid_config": "Ungültige Profilkonfiguration"
+    },
+    "provider": {
+      "not_found": "Unbekannter Provider"
+    }
+  }
+}
