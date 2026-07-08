@@ -15,3 +15,4 @@ Significant technical decisions in HELBOOT are documented as ADRs
 | [0008](0008-plugin-system.md) | Plugin system: extension points first, runtime later | Accepted |
 | [0009](0009-single-docker-image.md) | One Docker image, one container, one supervisor | Accepted |
 | [0010](0010-api-first-rest-openapi.md) | API-first: versioned REST with OpenAPI contract | Accepted |
+| [0011](0011-network-protocol-libraries.md) | Network protocol libraries and iPXE distribution | Accepted |

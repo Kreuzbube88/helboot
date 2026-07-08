@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/kreuzbube88/helboot/backend/internal/boot"
 	"github.com/kreuzbube88/helboot/backend/internal/model"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
@@ -24,14 +25,16 @@ type Server struct {
 	version      string
 	openAPISpec  []byte
 	staticFiles  http.Handler
+	boot         *boot.Handler
 	loginLimiter *rateLimiter
 	handler      http.Handler
 }
 
 // New builds the API server. staticFiles serves the embedded frontend
-// and may be nil (API-only mode, used in tests). openAPISpec is the raw
-// OpenAPI document served at /api/v1/openapi.yaml.
-func New(log *slog.Logger, st *store.Store, reg *provider.Registry, version string, openAPISpec []byte, staticFiles http.Handler) *Server {
+// and may be nil (API-only mode, used in tests); bootHandler mounts the
+// unauthenticated /boot/ surface and may also be nil. openAPISpec is the
+// raw OpenAPI document served at /api/v1/openapi.yaml.
+func New(log *slog.Logger, st *store.Store, reg *provider.Registry, version string, openAPISpec []byte, staticFiles http.Handler, bootHandler *boot.Handler) *Server {
 	s := &Server{
 		log:         log,
 		store:       st,
@@ -39,6 +42,7 @@ func New(log *slog.Logger, st *store.Store, reg *provider.Registry, version stri
 		version:     version,
 		openAPISpec: openAPISpec,
 		staticFiles: staticFiles,
+		boot:        bootHandler,
 		// 5 attempts immediately, then one attempt every 2 seconds per
 		// client IP — brute-force protection on login (§29).
 		loginLimiter: newRateLimiter(5, 2*time.Second),
@@ -75,12 +79,20 @@ func (s *Server) buildRoutes() http.Handler {
 	mux.Handle("PUT /api/v1/hosts/{id}", s.require(model.RoleOperator, s.handleUpdateHost))
 	mux.Handle("DELETE /api/v1/hosts/{id}", s.require(model.RoleOperator, s.handleDeleteHost))
 
+	mux.Handle("GET /api/v1/network/config", s.require(model.RoleViewer, s.handleGetNetworkConfig))
+	mux.Handle("PUT /api/v1/network/config", s.require(model.RoleAdmin, s.handlePutNetworkConfig))
+
 	mux.Handle("GET /api/v1/profiles", s.require(model.RoleViewer, s.handleListProfiles))
 	mux.Handle("POST /api/v1/profiles", s.require(model.RoleOperator, s.handleCreateProfile))
 	mux.Handle("GET /api/v1/profiles/{id}", s.require(model.RoleViewer, s.handleGetProfile))
 	mux.Handle("GET /api/v1/profiles/{id}/versions", s.require(model.RoleViewer, s.handleProfileVersions))
 	mux.Handle("PUT /api/v1/profiles/{id}", s.require(model.RoleOperator, s.handleUpdateProfile))
 	mux.Handle("DELETE /api/v1/profiles/{id}", s.require(model.RoleOperator, s.handleDeleteProfile))
+
+	// Unauthenticated boot surface for firmware/iPXE (ADR-0010).
+	if s.boot != nil {
+		s.boot.Register(mux)
+	}
 
 	// Unknown API paths must return a JSON 404, not the SPA fallback.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {

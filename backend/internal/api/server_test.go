@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/kreuzbube88/helboot/backend/internal/boot"
 	"github.com/kreuzbube88/helboot/backend/internal/db"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
@@ -52,7 +53,8 @@ answer_file: {format: preseed}
 		t.Fatal(err)
 	}
 
-	server := New(log, store.New(sqlDB), registry, "test", []byte("openapi: 3.1.0"), nil)
+	server := New(log, store.New(sqlDB), registry, "test", []byte("openapi: 3.1.0"), nil,
+		boot.New(log, store.New(sqlDB), t.TempDir()))
 	ts := httptest.NewServer(server.Handler())
 	t.Cleanup(ts.Close)
 	return ts

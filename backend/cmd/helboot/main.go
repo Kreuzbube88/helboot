@@ -16,10 +16,12 @@ import (
 
 	"github.com/kreuzbube88/helboot/backend/api"
 	apihttp "github.com/kreuzbube88/helboot/backend/internal/api"
+	"github.com/kreuzbube88/helboot/backend/internal/boot"
 	"github.com/kreuzbube88/helboot/backend/internal/config"
 	"github.com/kreuzbube88/helboot/backend/internal/db"
 	"github.com/kreuzbube88/helboot/backend/internal/logging"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
+	"github.com/kreuzbube88/helboot/backend/internal/service"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
 	"github.com/kreuzbube88/helboot/backend/internal/web"
 )
@@ -39,7 +41,12 @@ func run() error {
 	log := logging.New(os.Stdout, cfg.LogLevel, cfg.LogFormat)
 	log.Info("starting HELBOOT", "version", version)
 
-	for _, dir := range []string{cfg.DataDir, filepath.Join(cfg.DataDir, "isos"), filepath.Join(cfg.DataDir, "logs")} {
+	for _, dir := range []string{
+		cfg.DataDir,
+		filepath.Join(cfg.DataDir, "isos"),
+		filepath.Join(cfg.DataDir, "logs"),
+		filepath.Join(cfg.AssetsPath(), "tftp"),
+	} {
 		if err := os.MkdirAll(dir, 0o750); err != nil {
 			return fmt.Errorf("create data directory %s: %w", dir, err)
 		}
@@ -60,7 +67,8 @@ func run() error {
 		return err
 	}
 
-	server := apihttp.New(log, st, registry, version, api.OpenAPISpec, web.Handler())
+	bootHandler := boot.New(log, st, cfg.AssetsPath())
+	server := apihttp.New(log, st, registry, version, api.OpenAPISpec, web.Handler(), bootHandler)
 	httpServer := &http.Server{
 		Addr:              cfg.HTTPAddr,
 		Handler:           server.Handler(),
@@ -69,6 +77,19 @@ func run() error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	// Boot-network services (TFTP + DHCP/ProxyDHCP) run supervised in
+	// this same process (ADR-0009). Configuration changes require a
+	// restart, which the API reports to the UI.
+	manager := service.NewManager(log)
+	for _, svc := range buildNetworkServices(cfg, st, log) {
+		manager.Add(svc)
+	}
+	managerDone := make(chan struct{})
+	go func() {
+		manager.Run(ctx)
+		close(managerDone)
+	}()
 
 	// Housekeeping: purge expired sessions periodically.
 	go func() {
@@ -103,5 +124,11 @@ func run() error {
 	log.Info("shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	return httpServer.Shutdown(shutdownCtx)
+	err = httpServer.Shutdown(shutdownCtx)
+	select {
+	case <-managerDone:
+	case <-shutdownCtx.Done():
+		log.Warn("network services did not stop in time")
+	}
+	return err
 }

@@ -21,6 +21,7 @@ tags:
   - name: providers
   - name: hosts
   - name: profiles
+  - name: network
 
 paths:
   /health:
@@ -339,6 +340,38 @@ paths:
                 items: { $ref: "#/components/schemas/ProfileVersion" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /network/config:
+    get:
+      tags: [network]
+      summary: Boot-network configuration
+      responses:
+        "200":
+          description: Current configuration
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NetworkConfig" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    put:
+      tags: [network]
+      summary: Update the boot-network configuration (admin)
+      description: Changes take effect after a restart.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NetworkConfig" }
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saved: { type: boolean }
+                  restartRequired: { type: boolean }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
 components:
   securitySchemes:
     sessionCookie:
@@ -464,6 +497,25 @@ components:
         currentVersion: { type: integer }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    NetworkConfig:
+      type: object
+      required: [mode]
+      properties:
+        mode: { type: string, enum: [proxy_dhcp, dhcp] }
+        serverIp:
+          type: string
+          description: Address PXE clients use to reach HELBOOT; empty = auto-detect.
+        dhcp:
+          type: object
+          description: Only relevant in dhcp mode.
+          properties:
+            rangeStart: { type: string }
+            rangeEnd: { type: string }
+            subnetMask: { type: string }
+            gateway: { type: string }
+            dns: { type: string, description: Comma-separated resolver IPs }
+            leaseMinutes: { type: integer }
 
     ProfileVersion:
       type: object
