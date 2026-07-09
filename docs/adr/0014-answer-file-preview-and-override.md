@@ -6,7 +6,7 @@
 ## Context
 
 Answer files (autounattend.xml, preseed, kickstart, autoinstall,
-AutoYaST, answer.toml, dietpi.txt) are generated from Go
+AutoYaST, answer.toml) are generated from Go
 `text/template` files that live **in each provider's directory**
 (`providers/<name>/templates/`), never in core — new OS versions are
 added as data (ADR-0005). Template values come from the profile's

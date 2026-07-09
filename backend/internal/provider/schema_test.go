@@ -91,8 +91,8 @@ func TestShippedManifestsHaveValidSchemas(t *testing.T) {
 		t.Fatalf("LoadDir: %v", err)
 	}
 	all := reg.All()
-	if len(all) < 13 {
-		t.Fatalf("loaded %d shipped providers, want at least 13 — a manifest failed validation", len(all))
+	if len(all) < 11 {
+		t.Fatalf("loaded %d shipped providers, want at least 11 — a manifest failed validation", len(all))
 	}
 	for _, m := range all {
 		if m.Has(CapUnattendedInstall) && len(m.SettingsSchema) == 0 && m.AnswerFile.Template != "" {

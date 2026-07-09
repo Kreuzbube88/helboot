@@ -28,10 +28,22 @@ body:
       description: How does this OS install itself?
       options:
         - Unattended installer from ISO (kickstart / preseed / AutoYaST / autoinstall-style)
-        - Pre-built disk image written to storage (dietpi/HAOS/TrueNAS-style)
+        - Interactive installer from ISO, no unattended answer file (network-boot only, TrueNAS SCALE-style)
+        - Pre-built disk image written to storage, no installer at all (DietPi/HAOS-style)
         - Other / not sure
     validations:
       required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        **Note on "pre-built disk image" operating systems:** HELBOOT
+        currently has no way to write a raw disk image to a target over
+        the network — there's no installer to network-boot into, so
+        nothing is delivered at all (unlike an interactive-installer OS,
+        which HELBOOT can at least network-boot). Requests of this kind
+        are tracked as a capability request (network image-write), not a
+        regular provider addition — expect it to take longer.
 
   - type: input
     id: answer-format

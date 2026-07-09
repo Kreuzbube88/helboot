@@ -41,13 +41,22 @@ you.
 ## Supported operating systems (v1 targets)
 
 - **Windows:** 10, 11, Server 2022, Server 2025
-- **Linux:** Debian, Ubuntu, Fedora, openSUSE, DietPi
-- **Virtualization:** Proxmox VE
+- **Linux:** Debian, Ubuntu, Fedora, openSUSE
+- **Virtualization:** Proxmox VE, VMware ESXi
 - **NAS:** TrueNAS SCALE
-- **Appliances:** Home Assistant OS, VMware ESXi
 
 Where full automation is not technically possible for an OS, the provider
-documents its limitations and the UI reflects them via capabilities.
+documents its limitations and the UI reflects them via capabilities — for
+example TrueNAS SCALE network-boots its installer but has no unattended
+answer-file format of its own.
+
+HELBOOT only ships providers it can install fully unattended over the
+network (or, like TrueNAS SCALE, at least network-boot). Operating
+systems that ship as pre-built disk images with no network-install path
+of their own (e.g. DietPi, Home Assistant OS) are out of scope until
+HELBOOT gains a network image-write capability — see the
+[provider request template](.github/ISSUE_TEMPLATE/provider_request.yml)
+if you'd like to help design that.
 
 ## Network modes
 

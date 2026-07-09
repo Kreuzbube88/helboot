@@ -40,3 +40,22 @@ serves manifests. Behavior that genuinely cannot be expressed as data
   provider, never the application.
 - Family-level Go hooks are the escape hatch, and each new hook needs
   justification in review.
+
+## Amendment (2026-07-09): DietPi and Home Assistant OS removed
+
+DietPi and Home Assistant OS were shipped as providers with
+`unattended_install`/`image` capabilities but no boot method at all
+(`pxe`/`http_boot`/`usb_boot` all `false`): both ship as pre-built disk
+images with no network-install path, so HELBOOT had nothing to actually
+deliver over the network — queuing an installation left the host stuck
+in `waiting` indefinitely. This is a different situation from TrueNAS
+SCALE (network-boots a real, if interactive, installer) or ESXi Secure
+Boot (a declared, narrower capability gap): DietPi/HAOS had no working
+path at all, not a reduced one.
+
+Both providers are removed until HELBOOT gains a genuine network
+image-write capability (netboot a minimal environment that writes a raw
+image to the target disk) — a substantial addition (destructive
+disk-write safety, a new boot-method type) that needs its own ADR and
+explicit product decision, not a passive "documented limitation" on an
+otherwise inert provider.
