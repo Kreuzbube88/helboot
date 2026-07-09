@@ -44,9 +44,16 @@ name: debian
 display_name: "Debian"
 family: debian
 capabilities: {iso: true, pxe: true, unattended_install: true}
-answer_file: {format: preseed}
+answer_file: {format: preseed, template: templates/preseed.cfg.tmpl}
 `
 	if err := os.WriteFile(filepath.Join(pdir, "provider.yaml"), []byte(manifest), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(pdir, "templates"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	tmpl := "lang {{ .language }}\nhost {{ .Hostname }}\nreport {{ .ReportURL }}\n"
+	if err := os.WriteFile(filepath.Join(pdir, "templates", "preseed.cfg.tmpl"), []byte(tmpl), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -391,6 +398,79 @@ func TestProfileVersioning(t *testing.T) {
 	json.Unmarshal(body, &p)
 	if p.CurrentVersion != 3 {
 		t.Errorf("after conflict: currentVersion = %d, want 3", p.CurrentVersion)
+	}
+}
+
+func TestAnswerPreviewAndOverride(t *testing.T) {
+	ts := testServer(t)
+	c := newClient(t, ts)
+	c.setupAndLogin()
+
+	resp, body := c.do(http.MethodPost, "/api/v1/profiles", map[string]any{
+		"name": "Debian Base", "provider": "debian",
+		"config": map[string]any{"language": "de"},
+	})
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("create profile: status %d: %s", resp.StatusCode, body)
+	}
+
+	var preview struct {
+		Format     string `json:"format"`
+		Content    string `json:"content"`
+		Overridden bool   `json:"overridden"`
+	}
+	resp, body = c.do(http.MethodGet, "/api/v1/profiles/1/versions/1/answer", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("preview: status %d: %s", resp.StatusCode, body)
+	}
+	json.Unmarshal(body, &preview)
+	if preview.Format != "preseed" || preview.Overridden {
+		t.Errorf("preview = %+v, want preseed / not overridden", preview)
+	}
+	if !strings.Contains(preview.Content, "lang de") {
+		t.Errorf("preview does not render config values: %s", preview.Content)
+	}
+	if !strings.Contains(preview.Content, "PREVIEW-TOKEN") {
+		t.Errorf("preview must use placeholder boot params: %s", preview.Content)
+	}
+
+	// A syntactically broken override is rejected up front.
+	resp, _ = c.do(http.MethodPut, "/api/v1/profiles/1/versions/1/answer-override",
+		map[string]any{"content": "{{ .broken"})
+	if resp.StatusCode != http.StatusUnprocessableEntity {
+		t.Errorf("broken override: status %d, want 422", resp.StatusCode)
+	}
+
+	// A valid override replaces the template and stays a template itself.
+	resp, _ = c.do(http.MethodPut, "/api/v1/profiles/1/versions/1/answer-override",
+		map[string]any{"content": "custom for {{ .MAC }}"})
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("set override: status %d", resp.StatusCode)
+	}
+	resp, body = c.do(http.MethodGet, "/api/v1/profiles/1/versions/1/answer", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("preview after override: status %d", resp.StatusCode)
+	}
+	json.Unmarshal(body, &preview)
+	if !preview.Overridden || !strings.Contains(preview.Content, "custom for 52:54:00") {
+		t.Errorf("override not served: %+v", preview)
+	}
+
+	// Empty content clears the override (= regenerate from template).
+	resp, _ = c.do(http.MethodPut, "/api/v1/profiles/1/versions/1/answer-override",
+		map[string]any{"content": ""})
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("clear override: status %d", resp.StatusCode)
+	}
+	resp, body = c.do(http.MethodGet, "/api/v1/profiles/1/versions/1/answer", nil)
+	json.Unmarshal(body, &preview)
+	if preview.Overridden {
+		t.Error("override should be cleared")
+	}
+
+	resp, _ = c.do(http.MethodGet, "/api/v1/profiles/1/versions/9/answer", nil)
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("unknown version: status %d, want 404", resp.StatusCode)
 	}
 }
 

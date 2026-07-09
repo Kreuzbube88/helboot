@@ -466,6 +466,65 @@ paths:
                 items: { $ref: "#/components/schemas/ProfileVersion" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /profiles/{id}/versions/{version}/answer:
+    get:
+      tags: [profiles]
+      summary: Preview the rendered answer file of a profile version
+      description: >
+        Renders the answer file exactly as the boot chain would, with
+        recognizable placeholder boot parameters (ADR-0014). Returns the
+        manual override when one is set.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: version, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: The rendered answer file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  format: { type: string }
+                  content: { type: string }
+                  overridden: { type: boolean }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: The template (or override) fails to render (`profile.answer_render_failed`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /profiles/{id}/versions/{version}/answer-override:
+    put:
+      tags: [profiles]
+      summary: Set or clear the manual answer-file override (operator)
+      description: >
+        A non-empty `content` replaces the provider template for this
+        version until cleared; it runs through the same template engine,
+        so boot parameters like `{{ .ISOURL }}` keep working. An empty
+        `content` clears the override (ADR-0014).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: version, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string }
+      responses:
+        "204": { description: Stored }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: The override fails to render (`profile.answer_render_failed`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
   /logs:
     get:
       tags: [logs]
@@ -918,6 +977,9 @@ components:
         profileId: { type: integer }
         version: { type: integer }
         config: { type: string, description: JSON document as string }
+        answerOverride:
+          type: string
+          description: Manual answer-file override; empty = generate from the provider template (ADR-0014).
         createdAt: { type: string, format: date-time }
 
 security:

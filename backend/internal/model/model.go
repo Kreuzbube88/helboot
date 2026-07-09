@@ -110,11 +110,15 @@ type Profile struct {
 // Config is a provider-shaped JSON document (language, users, network,
 // partitioning, packages, scripts, ...) validated by the provider.
 type ProfileVersion struct {
-	ID        int64     `json:"id"`
-	ProfileID int64     `json:"profileId"`
-	Version   int       `json:"version"`
-	Config    string    `json:"config"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID        int64  `json:"id"`
+	ProfileID int64  `json:"profileId"`
+	Version   int    `json:"version"`
+	Config    string `json:"config"`
+	// AnswerOverride, while non-empty, replaces the provider's answer
+	// file template for this version (ADR-0014). It is rendered through
+	// the same template engine so boot parameters keep working.
+	AnswerOverride string    `json:"answerOverride"`
+	CreatedAt      time.Time `json:"createdAt"`
 }
 
 // InstallationStatus tracks the installation queue states (§16).

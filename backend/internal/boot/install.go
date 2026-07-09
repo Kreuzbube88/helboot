@@ -134,22 +134,31 @@ func (h *Handler) markInstalling(ic *installContext) {
 }
 
 // handleAnswerFile serves the rendered answer file for an installation.
+// A manual override on the profile version replaces the provider
+// template (ADR-0014); both run through the same template engine.
 func (h *Handler) handleAnswerFile(w http.ResponseWriter, r *http.Request) {
 	ic, ok := h.contextByToken(w, r)
 	if !ok {
 		return
 	}
-	if ic.manifest.AnswerFile.Template == "" {
+	params := h.answerParams(baseURL(r), ic)
+
+	var out []byte
+	var err error
+	if ic.version.AnswerOverride != "" {
+		out, err = answer.Render(ic.version.AnswerOverride, ic.version.Config, params)
+	} else if ic.manifest.AnswerFile.Template == "" {
 		http.Error(w, "provider has no answer file", http.StatusNotFound)
 		return
+	} else {
+		providerDir := ic.manifest.Dir
+		if providerDir == "" {
+			providerDir = filepath.Join(h.providersDir, ic.manifest.Name)
+		}
+		templatePath := filepath.Join(providerDir,
+			filepath.Clean("/"+ic.manifest.AnswerFile.Template))
+		out, err = answer.RenderFile(templatePath, ic.version.Config, params)
 	}
-	providerDir := ic.manifest.Dir
-	if providerDir == "" {
-		providerDir = filepath.Join(h.providersDir, ic.manifest.Name)
-	}
-	templatePath := filepath.Join(providerDir,
-		filepath.Clean("/"+ic.manifest.AnswerFile.Template))
-	out, err := answer.RenderFile(templatePath, ic.version.Config, h.answerParams(baseURL(r), ic))
 	if err != nil {
 		h.log.Error("boot: answer file rendering failed", "provider", ic.manifest.Name, "error", err)
 		http.Error(w, "answer file rendering failed", http.StatusInternalServerError)

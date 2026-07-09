@@ -178,7 +178,7 @@ func (s *Store) DeleteProfile(id int64) error {
 // ProfileVersions returns all version snapshots of a profile, newest last.
 func (s *Store) ProfileVersions(profileID int64) ([]model.ProfileVersion, error) {
 	rows, err := s.db.Query(
-		`SELECT id, profile_id, version, config, created_at FROM profile_versions
+		`SELECT id, profile_id, version, config, answer_override, created_at FROM profile_versions
 		 WHERE profile_id = ? ORDER BY version`, profileID,
 	)
 	if err != nil {
@@ -190,13 +190,29 @@ func (s *Store) ProfileVersions(profileID int64) ([]model.ProfileVersion, error)
 	for rows.Next() {
 		var v model.ProfileVersion
 		var createdAt string
-		if err := rows.Scan(&v.ID, &v.ProfileID, &v.Version, &v.Config, &createdAt); err != nil {
+		if err := rows.Scan(&v.ID, &v.ProfileID, &v.Version, &v.Config, &v.AnswerOverride, &createdAt); err != nil {
 			return nil, err
 		}
 		v.CreatedAt = parseTime(createdAt)
 		versions = append(versions, v)
 	}
 	return versions, rows.Err()
+}
+
+// SetAnswerOverride stores (or, with empty content, clears) the manual
+// answer-file override of a profile version (ADR-0014).
+func (s *Store) SetAnswerOverride(profileID int64, version int, content string) error {
+	res, err := s.db.Exec(
+		`UPDATE profile_versions SET answer_override = ? WHERE profile_id = ? AND version = ?`,
+		content, profileID, version,
+	)
+	if err != nil {
+		return fmt.Errorf("set answer override: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 const profileSelect = `SELECT id, name, provider, iso_id, current_version, created_at, updated_at FROM profiles`

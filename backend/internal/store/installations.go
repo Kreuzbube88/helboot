@@ -146,29 +146,21 @@ func scanInstallation(rows *sql.Rows) (*model.Installation, error) {
 
 // ProfileVersionByID returns one profile version snapshot.
 func (s *Store) ProfileVersionByID(id int64) (*model.ProfileVersion, error) {
-	var v model.ProfileVersion
-	var createdAt string
-	err := s.db.QueryRow(
-		`SELECT id, profile_id, version, config, created_at FROM profile_versions WHERE id = ?`, id,
-	).Scan(&v.ID, &v.ProfileID, &v.Version, &v.Config, &createdAt)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("profile version: %w", err)
-	}
-	v.CreatedAt = parseTime(createdAt)
-	return &v, nil
+	return s.oneProfileVersion(`WHERE id = ?`, id)
 }
 
 // ProfileVersionNumber returns a specific version snapshot of a profile.
 func (s *Store) ProfileVersionNumber(profileID int64, version int) (*model.ProfileVersion, error) {
+	return s.oneProfileVersion(`WHERE profile_id = ? AND version = ?`, profileID, version)
+}
+
+func (s *Store) oneProfileVersion(where string, args ...any) (*model.ProfileVersion, error) {
 	var v model.ProfileVersion
 	var createdAt string
 	err := s.db.QueryRow(
-		`SELECT id, profile_id, version, config, created_at FROM profile_versions
-		 WHERE profile_id = ? AND version = ?`, profileID, version,
-	).Scan(&v.ID, &v.ProfileID, &v.Version, &v.Config, &createdAt)
+		`SELECT id, profile_id, version, config, answer_override, created_at FROM profile_versions `+where,
+		args...,
+	).Scan(&v.ID, &v.ProfileID, &v.Version, &v.Config, &v.AnswerOverride, &createdAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
