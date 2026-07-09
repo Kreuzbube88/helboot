@@ -11,6 +11,66 @@ capabilities:
 answer_file:
   format: answer.toml
   template: templates/answer.toml.tmpl
+settings_schema:
+  - key: Keyboard
+    type: select
+    label: "Keyboard layout"
+    group: localization
+    default: "en-us"
+    required: true
+    options: [de, de-ch, dk, en-gb, en-us, es, fi, fr, fr-be, fr-ca, fr-ch, hu, is, it, jp, lt, mk, nl, no, pl, pt, pt-br, se, si, tr]
+  - key: Country
+    type: string
+    label: "Country code"
+    group: localization
+    required: true
+    placeholder: "de"
+    help: "Two-letter country code."
+  - key: Timezone
+    type: string
+    label: "Timezone"
+    group: localization
+    default: "Etc/UTC"
+    required: true
+    placeholder: "Europe/Berlin"
+  - key: Hostname
+    type: string
+    label: "Hostname"
+    group: network
+    help: "Leave empty to use the hostname from the host entry."
+  - key: Domain
+    type: string
+    label: "Domain"
+    group: network
+    default: "lan"
+    required: true
+    help: "Forms the FQDN together with the hostname."
+  - key: Email
+    type: string
+    label: "Admin email"
+    group: users
+    required: true
+    placeholder: "admin@example.com"
+  - key: Password
+    type: password
+    label: "Root password"
+    group: users
+    required: true
+    help: "Stored and embedded in the answer file as plain text."
+  - key: Filesystem
+    type: select
+    label: "Filesystem"
+    group: storage
+    default: "ext4"
+    required: true
+    options: [ext4, xfs, zfs, btrfs]
+  - key: Disk
+    type: string
+    label: "Target disk"
+    group: storage
+    default: "sda"
+    required: true
+    help: "Device name without /dev/, e.g. sda or nvme0n1."
 detection:
   volume_id_patterns: ["PVE*", "Proxmox*"]
   files: ["boot/linux26", ".pve-cd-id.txt"]

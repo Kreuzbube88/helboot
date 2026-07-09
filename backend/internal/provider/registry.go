@@ -21,15 +21,32 @@ type Registry struct {
 // A missing directory yields an empty registry: the server must come up
 // even before any providers are installed.
 func LoadDir(dir string, log *slog.Logger) (*Registry, error) {
-	reg := &Registry{providers: map[string]*Manifest{}}
+	return LoadDirs(log, dir)
+}
 
+// LoadDirs loads providers from several directories in order; a later
+// directory overrides earlier ones on name collision. This implements
+// the two load locations of ADR-0008: the shipped providers/ directory
+// plus user-supplied providers on the data volume.
+func LoadDirs(log *slog.Logger, dirs ...string) (*Registry, error) {
+	reg := &Registry{providers: map[string]*Manifest{}}
+	for _, dir := range dirs {
+		if err := reg.loadDir(dir, log); err != nil {
+			return nil, err
+		}
+	}
+	log.Info("providers loaded", "count", len(reg.providers))
+	return reg, nil
+}
+
+func (r *Registry) loadDir(dir string, log *slog.Logger) error {
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
-		log.Warn("providers directory does not exist; no providers loaded", "dir", dir)
-		return reg, nil
+		log.Debug("providers directory does not exist; skipped", "dir", dir)
+		return nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("read providers directory: %w", err)
+		return fmt.Errorf("read providers directory: %w", err)
 	}
 
 	for _, entry := range entries {
@@ -50,11 +67,14 @@ func LoadDir(dir string, log *slog.Logger) (*Registry, error) {
 				"dir", entry.Name(), "name", manifest.Name)
 			continue
 		}
-		reg.providers[manifest.Name] = manifest
+		manifest.Dir = filepath.Join(dir, entry.Name())
+		if _, exists := r.providers[manifest.Name]; exists {
+			log.Info("provider overridden by later load location", "name", manifest.Name, "dir", dir)
+		}
+		r.providers[manifest.Name] = manifest
 		log.Debug("loaded provider", "name", manifest.Name)
 	}
-	log.Info("providers loaded", "count", len(reg.providers))
-	return reg, nil
+	return nil
 }
 
 func loadManifest(path string) (*Manifest, error) {

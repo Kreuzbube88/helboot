@@ -25,6 +25,10 @@ type Manifest struct {
 	Capabilities map[string]bool `yaml:"capabilities" json:"capabilities"`
 	// AnswerFile describes the unattended-install answer file.
 	AnswerFile AnswerFile `yaml:"answer_file" json:"answerFile"`
+	// SettingsSchema declares the configurable profile settings; the
+	// frontend generates the profile form from it and the API validates
+	// config documents against it (ADR-0012).
+	SettingsSchema []SettingsField `yaml:"settings_schema" json:"settingsSchema"`
 	// Detection contains the rules the ISO analyzer matches against.
 	Detection Detection `yaml:"detection" json:"detection"`
 	// Boot configures each supported boot method.
@@ -32,6 +36,9 @@ type Manifest struct {
 	// Notes documents known limitations of this provider (§8: where full
 	// automation is not possible, prepare and document).
 	Notes string `yaml:"notes" json:"notes,omitempty"`
+	// Dir is the directory the manifest was loaded from (templates live
+	// next to it). Set by the registry, never by the manifest itself.
+	Dir string `yaml:"-" json:"-"`
 }
 
 // Well-known capability keys. Manifests may declare additional ones;
@@ -104,6 +111,9 @@ func (m *Manifest) Validate() error {
 		default:
 			return fmt.Errorf("provider %s: unknown boot method %q", m.Name, method)
 		}
+	}
+	if err := validateSchema(m.SettingsSchema); err != nil {
+		return fmt.Errorf("provider %s: %w", m.Name, err)
 	}
 	return nil
 }

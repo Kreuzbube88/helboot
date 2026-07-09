@@ -11,6 +11,76 @@ capabilities:
 answer_file:
   format: preseed
   template: templates/preseed.cfg.tmpl
+settings_schema:
+  - key: Locale
+    type: string
+    label: "Locale"
+    group: localization
+    default: "en_US"
+    required: true
+  - key: Keyboard
+    type: string
+    label: "Keyboard layout"
+    group: localization
+    default: "us"
+    required: true
+  - key: Timezone
+    type: string
+    label: "Timezone"
+    group: localization
+    default: "UTC"
+    required: true
+    placeholder: "Europe/Berlin"
+  - key: Hostname
+    type: string
+    label: "Hostname"
+    group: network
+    help: "Leave empty to use the hostname from the host entry."
+  - key: Domain
+    type: string
+    label: "Domain"
+    group: network
+    placeholder: "lan"
+  - key: Username
+    type: string
+    label: "Username"
+    group: users
+    required: true
+  - key: PasswordHash
+    type: password
+    label: "Password hash"
+    group: users
+    required: true
+    help: "Crypted hash, e.g. from: mkpasswd -m sha-512"
+  - key: PartitionMethod
+    type: select
+    label: "Partitioning method"
+    group: storage
+    default: "regular"
+    required: true
+    options: [regular, lvm, crypto]
+  - key: MirrorHost
+    type: string
+    label: "Package mirror host"
+    group: packages
+    default: "deb.debian.org"
+    required: true
+  - key: MirrorPath
+    type: string
+    label: "Package mirror path"
+    group: packages
+    default: "/debian"
+    required: true
+  - key: Packages
+    type: string
+    label: "Additional packages"
+    group: packages
+    help: "Space-separated package names."
+  - key: LateCommand
+    type: text
+    label: "Late command"
+    group: scripts
+    help: "Shell command run at the end of the installation."
 detection:
   volume_id_patterns: ["Debian *"]
   files: [".disk/info", "dists"]

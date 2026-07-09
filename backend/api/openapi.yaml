@@ -770,6 +770,10 @@ components:
           properties:
             format: { type: string }
             template: { type: string }
+        settingsSchema:
+          type: array
+          description: Field descriptors the UI renders the profile form from (ADR-0012).
+          items: { $ref: "#/components/schemas/SettingsField" }
         detection:
           type: object
           properties:
@@ -785,6 +789,28 @@ components:
               cmdline: { type: string }
               requires: { type: array, items: { type: string } }
         notes: { type: string }
+
+    SettingsField:
+      type: object
+      required: [key, type, label]
+      properties:
+        key: { type: string, description: Config document key and template variable name }
+        type: { type: string, enum: [string, text, password, bool, int, select, list] }
+        label: { type: string, description: English fallback label; UI tries i18n key profileFields.<key> first }
+        group: { type: string, description: Form section (localization, users, network, storage, packages, scripts, install) }
+        default: { description: Pre-fill value; type matches `type` }
+        required: { type: boolean }
+        help: { type: string }
+        placeholder: { type: string }
+        options: { type: array, items: { type: string }, description: Allowed values (select only) }
+        min: { type: integer, description: Lower bound (int only) }
+        max: { type: integer, description: Upper bound (int only) }
+        dependsOn:
+          type: object
+          description: Field is shown/required only while another field has this value.
+          properties:
+            field: { type: string }
+            value: {}
 
     HostRequest:
       type: object

@@ -11,6 +11,63 @@ capabilities:
 answer_file:
   format: autoinstall.yaml
   template: templates/autoinstall.yaml.tmpl
+settings_schema:
+  - key: Locale
+    type: string
+    label: "Locale"
+    group: localization
+    default: "en_US.UTF-8"
+    required: true
+  - key: Keyboard
+    type: string
+    label: "Keyboard layout"
+    group: localization
+    default: "us"
+    required: true
+  - key: Timezone
+    type: string
+    label: "Timezone"
+    group: localization
+    default: "Etc/UTC"
+    required: true
+    placeholder: "Europe/Berlin"
+  - key: Hostname
+    type: string
+    label: "Hostname"
+    group: network
+    help: "Leave empty to use the hostname from the host entry."
+  - key: Username
+    type: string
+    label: "Username"
+    group: users
+    required: true
+  - key: PasswordHash
+    type: password
+    label: "Password hash"
+    group: users
+    required: true
+    help: "Crypted hash, e.g. from: mkpasswd -m sha-512"
+  - key: SSHAllowPassword
+    type: bool
+    label: "Allow SSH password login"
+    group: users
+    default: true
+  - key: StorageLayout
+    type: select
+    label: "Storage layout"
+    group: storage
+    default: "lvm"
+    required: true
+    options: [lvm, direct, zfs]
+  - key: Packages
+    type: list
+    label: "Additional packages"
+    group: packages
+  - key: LateCommands
+    type: list
+    label: "Late commands"
+    group: scripts
+    help: "Shell commands run at the end of the installation."
 detection:
   volume_id_patterns: ["Ubuntu*", "Ubuntu-Server*"]
   files: [".disk/info", "casper"]

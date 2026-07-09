@@ -143,7 +143,11 @@ func (h *Handler) handleAnswerFile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "provider has no answer file", http.StatusNotFound)
 		return
 	}
-	templatePath := filepath.Join(h.providersDir, ic.manifest.Name,
+	providerDir := ic.manifest.Dir
+	if providerDir == "" {
+		providerDir = filepath.Join(h.providersDir, ic.manifest.Name)
+	}
+	templatePath := filepath.Join(providerDir,
 		filepath.Clean("/"+ic.manifest.AnswerFile.Template))
 	out, err := answer.RenderFile(templatePath, ic.version.Config, h.answerParams(baseURL(r), ic))
 	if err != nil {

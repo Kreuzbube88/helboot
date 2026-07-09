@@ -12,6 +12,42 @@ capabilities:
 answer_file:
   format: dietpi.txt
   template: templates/dietpi.txt.tmpl
+settings_schema:
+  - key: Locale
+    type: string
+    label: "Locale"
+    group: localization
+    default: "en_GB.UTF-8"
+    required: true
+  - key: Keyboard
+    type: string
+    label: "Keyboard layout"
+    group: localization
+    default: "gb"
+    required: true
+  - key: Timezone
+    type: string
+    label: "Timezone"
+    group: localization
+    default: "Etc/UTC"
+    required: true
+    placeholder: "Europe/Berlin"
+  - key: Hostname
+    type: string
+    label: "Hostname"
+    group: network
+    help: "Leave empty to use the hostname from the host entry."
+  - key: Password
+    type: password
+    label: "Global password"
+    group: users
+    required: true
+    help: "Stored and embedded in dietpi.txt as plain text."
+  - key: SoftwareIDs
+    type: string
+    label: "Software IDs"
+    group: packages
+    help: "Comma-separated DietPi software IDs to install."
 detection:
   files: ["boot/dietpi.txt", "boot/dietpi"]
 notes: >

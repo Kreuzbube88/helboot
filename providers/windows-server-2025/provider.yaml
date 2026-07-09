@@ -11,6 +11,56 @@ capabilities:
 answer_file:
   format: autounattend.xml
   template: templates/autounattend.xml.tmpl
+settings_schema:
+  - key: Language
+    type: string
+    label: "Language"
+    group: localization
+    default: "en-US"
+    required: true
+    help: "Windows language tag, e.g. en-US or de-DE."
+  - key: Keyboard
+    type: string
+    label: "Keyboard layout"
+    group: localization
+    default: "en-US"
+    required: true
+    help: "Input locale, e.g. de-DE or 0407:00000407."
+  - key: Hostname
+    type: string
+    label: "Hostname"
+    group: network
+    help: "Leave empty to use the hostname from the host entry."
+  - key: Username
+    type: string
+    label: "Administrator account name"
+    group: users
+    required: true
+  - key: Password
+    type: password
+    label: "Account password"
+    group: users
+    required: true
+    help: "Stored and embedded in the answer file as plain text."
+  - key: ProductKey
+    type: string
+    label: "Product key"
+    group: install
+    help: "Leave empty to install without a key."
+  - key: ImageIndex
+    type: int
+    label: "Image index"
+    group: install
+    default: 1
+    required: true
+    min: 1
+    help: "Edition index inside install.wim/install.esd."
+  - key: BypassHardwareChecks
+    type: bool
+    label: "Bypass hardware checks"
+    group: install
+    default: false
+    help: "Rarely needed on Windows Server; kept for unusual lab hardware."
 detection:
   volume_id_patterns: ["SSS_X64FRE*", "SERVER_EVAL_X64FRE*"]
   files: ["sources/install.wim", "sources/boot.wim"]

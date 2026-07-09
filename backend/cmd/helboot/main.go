@@ -75,7 +75,9 @@ func run() error {
 	}
 	st := store.New(sqlDB)
 
-	registry, err := provider.LoadDir(cfg.ProvidersDir, log)
+	// Shipped providers first, user-supplied ones on the data volume
+	// second — later wins on name collision (ADR-0008).
+	registry, err := provider.LoadDirs(log, cfg.ProvidersDir, filepath.Join(cfg.DataDir, "providers"))
 	if err != nil {
 		return err
 	}

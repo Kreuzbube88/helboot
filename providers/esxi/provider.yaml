@@ -11,6 +11,23 @@ capabilities:
 answer_file:
   format: kickstart
   template: templates/ks.cfg.tmpl
+settings_schema:
+  - key: Hostname
+    type: string
+    label: "Hostname"
+    group: network
+    help: "Leave empty to use the hostname from the host entry."
+  - key: Password
+    type: password
+    label: "Root password"
+    group: users
+    required: true
+    help: "Stored and embedded in the answer file as plain text."
+  - key: PostScript
+    type: text
+    label: "First-boot script"
+    group: scripts
+    help: "Busybox script run via %firstboot."
 detection:
   volume_id_patterns: ["ESXI-*", "VMware-*"]
   files: ["mboot.efi", "boot.cfg"]
