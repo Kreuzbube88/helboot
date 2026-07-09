@@ -1,6 +1,17 @@
-# HELBOOT
+<h1 align="center">HELBOOT</h1>
 
-**HomeLab Enterprise Linux / Environment Boot Orchestration Tool**
+<p align="center">
+  <strong>Provisioning engine for homelabs — unattended OS installs over the network</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/status-early%20development-yellow" alt="Status">
+  <img src="https://img.shields.io/badge/go-%3E%3D1.25-00ADD8" alt="Go">
+  <img src="https://img.shields.io/github/license/Kreuzbube88/helboot" alt="License">
+  <img src="https://img.shields.io/badge/platform-Docker%20%7C%20Unraid-2496ED" alt="Platform">
+</p>
+
+---
 
 HELBOOT is a provisioning engine for homelabs. Upload an original OS ISO, let
 HELBOOT detect what it is, create an installation profile, register your
@@ -11,7 +22,7 @@ PXE is just one boot method. The architecture is built to grow: iPXE,
 HTTP boot, USB boot images, VM provisioning, cloud-init, Redfish and IPMI
 are all part of the roadmap.
 
-> **Status:** Early development, moving fast. Implemented so far: the
+> 🚧 **Status:** Early development, moving fast. Implemented so far: the
 > full network boot chain (ProxyDHCP/DHCP, TFTP, iPXE scripts, answer
 > files), ISO management with automatic OS detection, the installation
 > queue, host discovery, user management with roles, backup/restore,
@@ -20,6 +31,24 @@ are all part of the roadmap.
 > boot chain against real hardware is ongoing. See
 > [ARCHITECTURE.md](docs/ARCHITECTURE.md) and the [ADRs](docs/adr/).
 
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/dashboard-light.png" width="49%" alt="Dashboard (light theme)">
+  <img src="docs/screenshots/dashboard-dark.png" width="49%" alt="Dashboard (dark theme)">
+</p>
+<p align="center"><em>Dashboard overview — light and dark</em></p>
+
+<p align="center">
+  <img src="docs/screenshots/setup-wizard.png" width="49%" alt="First-run setup wizard">
+  <img src="docs/screenshots/profile-form.png" width="49%" alt="Profile form generated from a provider's settings schema">
+</p>
+<p align="center"><em>First-run setup wizard, and a profile form generated entirely from the provider's settings schema — no hardcoded per-OS forms</em></p>
+
+---
+
 ## Why HELBOOT?
 
 Existing netboot tools either serve live images only, require deep manual
@@ -27,6 +56,8 @@ configuration, or are built for enterprise fleets. HELBOOT targets the
 homelab: one Docker container, a first-run wizard, original (unmodified)
 ISOs, and profiles that generate the unattended-install answer files for
 you.
+
+---
 
 ## Core concepts
 
@@ -37,6 +68,8 @@ you.
 | **Profile** | A versioned installation recipe: OS + ISO + language, users, network, partitioning, packages, scripts. |
 | **Host** | A machine registered by MAC address, with vendor, model, tags, assigned profile and installation history. |
 | **Queue** | Planned installations with status tracking: discovered → waiting → installing → success/error. |
+
+---
 
 ## Supported operating systems (v1 targets)
 
@@ -58,6 +91,8 @@ HELBOOT gains a network image-write capability — see the
 [provider request template](.github/ISSUE_TEMPLATE/provider_request.yml)
 if you'd like to help design that.
 
+---
+
 ## Network modes
 
 - **Mode A — existing DHCP** (e.g. a FRITZ!Box): HELBOOT runs ProxyDHCP,
@@ -65,6 +100,8 @@ if you'd like to help design that.
   network required.
 - **Mode B — HELBOOT DHCP:** HELBOOT provides DHCP itself, plus PXE, TFTP
   and HTTP.
+
+---
 
 ## Deployment
 
@@ -86,6 +123,8 @@ On first start, the web UI walks you through a setup wizard: language,
 admin account, network mode, storage locations, and optionally your first
 ISO and profile.
 
+---
+
 ## Tech stack
 
 - **Backend:** Go — single static binary, REST API with OpenAPI spec
@@ -96,6 +135,8 @@ ISO and profile.
 See the [Architecture Decision Records](docs/adr/) for the reasoning
 behind each choice.
 
+---
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
@@ -105,6 +146,8 @@ behind each choice.
 - [Unraid](docs/UNRAID.md)
 - [Security policy](SECURITY.md)
 - [Contributing](CONTRIBUTING.md)
+
+---
 
 ## License
 
