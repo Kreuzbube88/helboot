@@ -64,7 +64,14 @@
     "profiles": "Profiles",
     "providers": "Providers",
     "version": "Version",
-    "networkMode": "Network mode"
+    "networkMode": "Network mode",
+    "dhcpServersSeen": "DHCP servers seen"
+  },
+  "warnings": {
+    "network": {
+      "multiple_dhcp_servers": "More than one DHCP server is answering on this network — PXE boot may be unreliable. Check for a rogue DHCP server.",
+      "rogue_dhcp_server": "Another DHCP server is answering although HELBOOT is configured as the DHCP server. Check for a rogue DHCP server."
+    }
   },
   "hosts": {
     "title": "Hosts",
@@ -81,6 +88,8 @@
     "firmware": "Firmware",
     "arch": "Architecture",
     "profile": "Profile",
+    "profileVersion": "Profile version",
+    "profileVersionHint": "The host installs exactly this version, even if the profile changes later.",
     "status": "Status",
     "statusDiscovered": "Discovered",
     "statusReady": "Ready",
@@ -100,7 +109,65 @@
     "clonePrompt": "Name for the cloned profile:",
     "export": "Export",
     "import": "Import profile",
-    "imported": "Profile imported. Assign an ISO before installing."
+    "imported": "Profile imported. Assign an ISO before installing.",
+    "editTitle": "Edit profile: {{name}}",
+    "saved": "Profile saved.",
+    "iso": "ISO image",
+    "isoHint": "Only recognized images of this operating system are listed.",
+    "noSettings": "This operating system has no configurable settings.",
+    "listHint": "One entry per line.",
+    "saveAsNewVersion": "Save as new version",
+    "saveAsNewVersionHint": "Unchecked: the current version is edited in place. Checked: the change becomes a new, immutable version.",
+    "versionInUseHint": "This version has already been used by an installation and cannot be changed. Saving as a new version has been pre-selected.",
+    "versions": "Version history",
+    "versionCreated": "Created",
+    "current": "current",
+    "answerFile": "Answer file",
+    "answerHint": "Preview of the generated answer file with placeholder values — exactly what an installing machine will receive. You can edit it manually; the override then replaces the generated file for this version until you remove it.",
+    "answerGenerated": "generated",
+    "answerOverridden": "manually overridden",
+    "answerEdit": "Edit manually",
+    "answerSaveOverride": "Save override",
+    "answerClearOverride": "Remove override",
+    "answerRefresh": "Regenerate preview"
+  },
+  "profileGroups": {
+    "localization": "Language & region",
+    "users": "Users & access",
+    "network": "Network",
+    "storage": "Partitioning & storage",
+    "packages": "Packages & software",
+    "scripts": "Scripts",
+    "install": "Installation"
+  },
+  "profileFields": {
+    "Locale": "Locale",
+    "Language": "Language",
+    "Keyboard": "Keyboard layout",
+    "Timezone": "Timezone",
+    "Country": "Country code",
+    "Hostname": "Hostname",
+    "Domain": "Domain",
+    "Username": "Username",
+    "Password": "Password",
+    "PasswordHash": "Password hash",
+    "Email": "Admin email",
+    "SSHAllowPassword": "Allow SSH password login",
+    "StorageLayout": "Storage layout",
+    "PartitionMethod": "Partitioning method",
+    "PartitionType": "Partitioning type",
+    "Filesystem": "Filesystem",
+    "Disk": "Target disk",
+    "Packages": "Additional packages",
+    "SoftwareIDs": "Software IDs",
+    "MirrorHost": "Package mirror host",
+    "MirrorPath": "Package mirror path",
+    "LateCommand": "Late command",
+    "LateCommands": "Late commands",
+    "PostScript": "Post-install script",
+    "ProductKey": "Product key",
+    "ImageIndex": "Image index",
+    "BypassHardwareChecks": "Bypass hardware checks"
   },
   "isos": {
     "title": "ISO images",
@@ -220,14 +287,21 @@
     "host": {
       "invalid_mac": "Invalid MAC address",
       "invalid_firmware": "Invalid firmware type",
-      "mac_exists": "A host with this MAC address already exists"
+      "mac_exists": "A host with this MAC address already exists",
+      "unknown_profile": "Unknown profile",
+      "unknown_profile_version": "The profile has no such version"
     },
     "profile": {
       "invalid_name": "Profile name is required",
       "unknown_provider": "Unknown operating system",
       "invalid_config": "Invalid profile configuration",
       "invalid_document": "This is not a HELBOOT profile file",
-      "name_exists": "A profile with this name already exists"
+      "name_exists": "A profile with this name already exists",
+      "version_in_use": "This version has already been used by an installation — save the change as a new version",
+      "unknown_version": "The profile has no such version",
+      "provider_missing": "The profile's operating system provider is not installed",
+      "no_answer_file": "This operating system generates no answer file",
+      "answer_render_failed": "The answer file cannot be rendered — check the template syntax"
     },
     "provider": {
       "not_found": "Unknown provider"

@@ -163,7 +163,8 @@ button:disabled {
 }
 
 input,
-select {
+select,
+textarea {
   font: inherit;
   padding: 0.5rem 0.7rem;
   border-radius: 6px;
@@ -171,6 +172,10 @@ select {
   background: var(--surface);
   color: var(--text);
   width: 100%;
+}
+
+textarea {
+  resize: vertical;
 }
 
 label {
@@ -258,4 +263,30 @@ label {
   border-radius: 999px;
   font-size: 0.8rem;
   border: 1px solid var(--border);
+}
+
+/* Grouped sections of the schema-generated profile form (ADR-0012). */
+.schema-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem 0.25rem;
+  margin: 0 0 1rem;
+}
+
+.schema-group legend {
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0 0.4rem;
+}
+
+.checkbox-field input[type='checkbox'] {
+  width: auto;
+}
+
+/* Rogue-DHCP and similar operational warnings (ADR-0016). */
+.warning-banner {
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
 }

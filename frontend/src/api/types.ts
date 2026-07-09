@@ -15,12 +15,32 @@ export interface SessionInfo {
   csrfToken: string
 }
 
+export type FieldType = 'string' | 'text' | 'password' | 'bool' | 'int' | 'select' | 'list'
+
+/** One field descriptor of a provider's settings schema (ADR-0012);
+ * the profile form is generated from these. */
+export interface SettingsField {
+  key: string
+  type: FieldType
+  label: string
+  group?: string
+  default?: unknown
+  required?: boolean
+  help?: string
+  placeholder?: string
+  options?: string[]
+  min?: number
+  max?: number
+  dependsOn?: { field: string; value: unknown }
+}
+
 export interface Provider {
   name: string
   displayName: string
   family: string
   capabilities: Record<string, boolean>
   answerFile: { format: string; template?: string }
+  settingsSchema: SettingsField[] | null
   notes?: string
 }
 
@@ -38,6 +58,8 @@ export interface Host {
   firmware: '' | 'bios' | 'uefi'
   arch: string
   profileId: number | null
+  /** Pinned profile version (ADR-0013); 0 while no profile is assigned. */
+  profileVersion: number
   status: HostStatus
   createdAt: string
   updatedAt: string
@@ -51,6 +73,23 @@ export interface Profile {
   currentVersion: number
   createdAt: string
   updatedAt: string
+}
+
+export interface ProfileVersion {
+  id: number
+  profileId: number
+  version: number
+  /** Config JSON document as string. */
+  config: string
+  /** Manual answer-file override; empty = generated from the template. */
+  answerOverride: string
+  createdAt: string
+}
+
+export interface AnswerPreview {
+  format: string
+  content: string
+  overridden: boolean
 }
 
 export interface SystemInfo {
@@ -93,6 +132,12 @@ export interface LogEntry {
   level: string
   message: string
   attrs?: Record<string, string>
+}
+
+export interface NetworkStatus {
+  mode: '' | 'proxy_dhcp' | 'dhcp'
+  dhcpServers: { ip: string; lastSeen: string }[]
+  warnings: { code: string; message: string }[]
 }
 
 export interface NetworkConfig {

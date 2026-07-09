@@ -64,7 +64,14 @@
     "profiles": "Profile",
     "providers": "Provider",
     "version": "Version",
-    "networkMode": "Netzwerkmodus"
+    "networkMode": "Netzwerkmodus",
+    "dhcpServersSeen": "Gesehene DHCP-Server"
+  },
+  "warnings": {
+    "network": {
+      "multiple_dhcp_servers": "Mehr als ein DHCP-Server antwortet in diesem Netzwerk — PXE-Boot kann unzuverlässig sein. Prüfen Sie auf einen unerwünschten DHCP-Server.",
+      "rogue_dhcp_server": "Ein fremder DHCP-Server antwortet, obwohl HELBOOT als DHCP-Server konfiguriert ist. Prüfen Sie auf einen unerwünschten DHCP-Server."
+    }
   },
   "hosts": {
     "title": "Hosts",
@@ -81,6 +88,8 @@
     "firmware": "Firmware",
     "arch": "Architektur",
     "profile": "Profil",
+    "profileVersion": "Profilversion",
+    "profileVersionHint": "Der Host installiert genau diese Version, auch wenn sich das Profil später ändert.",
     "status": "Status",
     "statusDiscovered": "Entdeckt",
     "statusReady": "Bereit",
@@ -100,7 +109,65 @@
     "clonePrompt": "Name für das geklonte Profil:",
     "export": "Exportieren",
     "import": "Profil importieren",
-    "imported": "Profil importiert. Weisen Sie vor der Installation ein ISO zu."
+    "imported": "Profil importiert. Weisen Sie vor der Installation ein ISO zu.",
+    "editTitle": "Profil bearbeiten: {{name}}",
+    "saved": "Profil gespeichert.",
+    "iso": "ISO-Abbild",
+    "isoHint": "Es werden nur erkannte Abbilder dieses Betriebssystems angezeigt.",
+    "noSettings": "Dieses Betriebssystem hat keine konfigurierbaren Einstellungen.",
+    "listHint": "Ein Eintrag pro Zeile.",
+    "saveAsNewVersion": "Als neue Version speichern",
+    "saveAsNewVersionHint": "Ohne Haken wird die aktuelle Version direkt geändert. Mit Haken wird die Änderung eine neue, unveränderliche Version.",
+    "versionInUseHint": "Diese Version wurde bereits von einer Installation verwendet und kann nicht mehr geändert werden. „Als neue Version speichern“ wurde vorausgewählt.",
+    "versions": "Versionshistorie",
+    "versionCreated": "Erstellt",
+    "current": "aktuell",
+    "answerFile": "Antwortdatei",
+    "answerHint": "Vorschau der generierten Antwortdatei mit Platzhalterwerten — genau das, was eine installierende Maschine erhält. Sie können sie manuell bearbeiten; die Überschreibung ersetzt dann die generierte Datei für diese Version, bis Sie sie entfernen.",
+    "answerGenerated": "generiert",
+    "answerOverridden": "manuell überschrieben",
+    "answerEdit": "Manuell bearbeiten",
+    "answerSaveOverride": "Überschreibung speichern",
+    "answerClearOverride": "Überschreibung entfernen",
+    "answerRefresh": "Vorschau neu generieren"
+  },
+  "profileGroups": {
+    "localization": "Sprache & Region",
+    "users": "Benutzer & Zugriff",
+    "network": "Netzwerk",
+    "storage": "Partitionierung & Speicher",
+    "packages": "Pakete & Software",
+    "scripts": "Skripte",
+    "install": "Installation"
+  },
+  "profileFields": {
+    "Locale": "Gebietsschema",
+    "Language": "Sprache",
+    "Keyboard": "Tastaturlayout",
+    "Timezone": "Zeitzone",
+    "Country": "Ländercode",
+    "Hostname": "Hostname",
+    "Domain": "Domain",
+    "Username": "Benutzername",
+    "Password": "Passwort",
+    "PasswordHash": "Passwort-Hash",
+    "Email": "Admin-E-Mail",
+    "SSHAllowPassword": "SSH-Passwort-Anmeldung erlauben",
+    "StorageLayout": "Speicher-Layout",
+    "PartitionMethod": "Partitionierungsmethode",
+    "PartitionType": "Partitionierungstyp",
+    "Filesystem": "Dateisystem",
+    "Disk": "Ziel-Datenträger",
+    "Packages": "Zusätzliche Pakete",
+    "SoftwareIDs": "Software-IDs",
+    "MirrorHost": "Paket-Mirror-Host",
+    "MirrorPath": "Paket-Mirror-Pfad",
+    "LateCommand": "Abschlussbefehl",
+    "LateCommands": "Abschlussbefehle",
+    "PostScript": "Post-Install-Skript",
+    "ProductKey": "Produktschlüssel",
+    "ImageIndex": "Image-Index",
+    "BypassHardwareChecks": "Hardware-Prüfungen umgehen"
   },
   "isos": {
     "title": "ISO-Abbilder",
@@ -220,14 +287,21 @@
     "host": {
       "invalid_mac": "Ungültige MAC-Adresse",
       "invalid_firmware": "Ungültiger Firmware-Typ",
-      "mac_exists": "Ein Host mit dieser MAC-Adresse existiert bereits"
+      "mac_exists": "Ein Host mit dieser MAC-Adresse existiert bereits",
+      "unknown_profile": "Unbekanntes Profil",
+      "unknown_profile_version": "Das Profil hat keine solche Version"
     },
     "profile": {
       "invalid_name": "Der Profilname ist erforderlich",
       "unknown_provider": "Unbekanntes Betriebssystem",
       "invalid_config": "Ungültige Profilkonfiguration",
       "invalid_document": "Dies ist keine HELBOOT-Profildatei",
-      "name_exists": "Ein Profil mit diesem Namen existiert bereits"
+      "name_exists": "Ein Profil mit diesem Namen existiert bereits",
+      "version_in_use": "Diese Version wurde bereits von einer Installation verwendet — speichern Sie die Änderung als neue Version",
+      "unknown_version": "Das Profil hat keine solche Version",
+      "provider_missing": "Der Betriebssystem-Provider dieses Profils ist nicht installiert",
+      "no_answer_file": "Dieses Betriebssystem erzeugt keine Antwortdatei",
+      "answer_render_failed": "Die Antwortdatei kann nicht generiert werden — prüfen Sie die Template-Syntax"
     },
     "provider": {
       "not_found": "Unbekannter Provider"

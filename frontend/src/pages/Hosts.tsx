@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
-import type { Host, Profile } from '../api/types'
+import type { Host, Profile, ProfileVersion } from '../api/types'
 import { ErrorMessage } from '../components/ErrorMessage'
 
 export function Hosts() {
@@ -11,6 +11,7 @@ export function Hosts() {
   const [error, setError] = useState<unknown>(null)
   const [notice, setNotice] = useState('')
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<Host | null>(null)
 
   function reload() {
     Promise.all([api.get<Host[]>('/hosts'), api.get<Profile[]>('/profiles')])
@@ -52,6 +53,28 @@ export function Hosts() {
     error: t('hosts.statusError'),
   }
 
+  function profileLabel(h: Host): string {
+    if (h.profileId == null) return t('common.none')
+    const name = profiles.find((p) => p.id === h.profileId)?.name ?? `#${h.profileId}`
+    return h.profileVersion > 0 ? `${name} (v${h.profileVersion})` : name
+  }
+
+  const form = (host: Host | null) => (
+    <HostForm
+      profiles={profiles}
+      host={host}
+      onSaved={() => {
+        setAdding(false)
+        setEditing(null)
+        reload()
+      }}
+      onCancel={() => {
+        setAdding(false)
+        setEditing(null)
+      }}
+    />
+  )
+
   return (
     <>
       <div className="toolbar">
@@ -62,16 +85,8 @@ export function Hosts() {
       </div>
       <ErrorMessage error={error} />
       {notice && <p className="muted">{notice}</p>}
-      {adding && (
-        <HostForm
-          profiles={profiles}
-          onSaved={() => {
-            setAdding(false)
-            reload()
-          }}
-          onCancel={() => setAdding(false)}
-        />
-      )}
+      {adding && form(null)}
+      {editing && form(editing)}
       {hosts && hosts.length === 0 && !adding && <p className="muted">{t('hosts.empty')}</p>}
       {hosts && hosts.length > 0 && (
         <table>
@@ -93,7 +108,7 @@ export function Hosts() {
                 </td>
                 <td>{h.hostname}</td>
                 <td>{h.vendor}</td>
-                <td>{profiles.find((p) => p.id === h.profileId)?.name ?? t('common.none')}</td>
+                <td>{profileLabel(h)}</td>
                 <td>
                   <span className="badge">{statusLabel[h.status]}</span>
                 </td>
@@ -101,6 +116,7 @@ export function Hosts() {
                   {h.profileId != null && h.status !== 'installing' && (
                     <button onClick={() => queueInstall(h)}>{t('installations.queue')}</button>
                   )}{' '}
+                  <button onClick={() => setEditing(h)}>{t('common.edit')}</button>{' '}
                   <button className="danger" onClick={() => remove(h)}>
                     {t('common.delete')}
                   </button>
@@ -114,37 +130,68 @@ export function Hosts() {
   )
 }
 
+/** Create/edit form. The pinned profile version (ADR-0013) is visible
+ * and changeable: assigning a profile defaults to its current version. */
 function HostForm({
   profiles,
+  host,
   onSaved,
   onCancel,
 }: {
   profiles: Profile[]
+  host: Host | null
   onSaved: () => void
   onCancel: () => void
 }) {
   const { t } = useTranslation()
-  const [mac, setMac] = useState('')
-  const [hostname, setHostname] = useState('')
-  const [tags, setTags] = useState('')
-  const [profileId, setProfileId] = useState<number | ''>('')
+  const [mac, setMac] = useState(host?.mac ?? '')
+  const [hostname, setHostname] = useState(host?.hostname ?? '')
+  const [tags, setTags] = useState(host?.tags.join(', ') ?? '')
+  const [profileId, setProfileId] = useState<number | ''>(host?.profileId ?? '')
+  const [profileVersion, setProfileVersion] = useState<number>(host?.profileVersion ?? 0)
+  const [versions, setVersions] = useState<ProfileVersion[]>([])
   const [error, setError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (profileId === '') {
+      setVersions([])
+      return
+    }
+    api
+      .get<ProfileVersion[]>(`/profiles/${profileId}/versions`)
+      .then(setVersions)
+      .catch(setError)
+  }, [profileId])
+
+  const selectedProfile = profiles.find((p) => p.id === profileId)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
     setError(null)
+    const payload = {
+      mac,
+      hostname,
+      vendor: host?.vendor ?? '',
+      model: host?.model ?? '',
+      serial: host?.serial ?? '',
+      assetId: host?.assetId ?? '',
+      firmware: host?.firmware ?? '',
+      arch: host?.arch ?? '',
+      tags: tags
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+      profileId: profileId === '' ? null : profileId,
+      profileVersion: profileId === '' ? 0 : profileVersion,
+    }
     try {
-      await api.post('/hosts', {
-        mac,
-        hostname,
-        tags: tags
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-        profileId: profileId === '' ? null : profileId,
-      })
+      if (host) {
+        await api.put(`/hosts/${host.id}`, payload)
+      } else {
+        await api.post('/hosts', payload)
+      }
       onSaved()
     } catch (err) {
       setError(err)
@@ -182,7 +229,12 @@ function HostForm({
         <select
           id="host-profile"
           value={profileId}
-          onChange={(e) => setProfileId(e.target.value === '' ? '' : Number(e.target.value))}
+          onChange={(e) => {
+            const id = e.target.value === '' ? '' : Number(e.target.value)
+            setProfileId(id)
+            const p = profiles.find((x) => x.id === id)
+            setProfileVersion(p?.currentVersion ?? 0)
+          }}
         >
           <option value="">{t('common.none')}</option>
           {profiles.map((p) => (
@@ -192,13 +244,33 @@ function HostForm({
           ))}
         </select>
       </div>
+      {profileId !== '' && versions.length > 0 && (
+        <div className="field">
+          <label htmlFor="host-profile-version">{t('hosts.profileVersion')}</label>
+          <select
+            id="host-profile-version"
+            value={profileVersion}
+            onChange={(e) => setProfileVersion(Number(e.target.value))}
+          >
+            {versions.map((v) => (
+              <option key={v.id} value={v.version}>
+                v{v.version}
+                {v.version === selectedProfile?.currentVersion
+                  ? ` (${t('profiles.current')})`
+                  : ''}
+              </option>
+            ))}
+          </select>
+          <small className="muted">{t('hosts.profileVersionHint')}</small>
+        </div>
+      )}
       <ErrorMessage error={error} />
       <div className="wizard-nav">
         <button type="button" onClick={onCancel} disabled={busy}>
           {t('common.cancel')}
         </button>
         <button className="primary" type="submit" disabled={busy}>
-          {t('common.create')}
+          {host ? t('common.save') : t('common.create')}
         </button>
       </div>
     </form>

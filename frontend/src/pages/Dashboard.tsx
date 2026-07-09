@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
-import type { Host, Profile, SystemInfo } from '../api/types'
+import type { Host, NetworkStatus, Profile, SystemInfo } from '../api/types'
 import { ErrorMessage } from '../components/ErrorMessage'
 
 export function Dashboard() {
@@ -9,6 +9,7 @@ export function Dashboard() {
   const [info, setInfo] = useState<SystemInfo | null>(null)
   const [hosts, setHosts] = useState<Host[] | null>(null)
   const [profiles, setProfiles] = useState<Profile[] | null>(null)
+  const [netStatus, setNetStatus] = useState<NetworkStatus | null>(null)
   const [error, setError] = useState<unknown>(null)
 
   useEffect(() => {
@@ -16,11 +17,13 @@ export function Dashboard() {
       api.get<SystemInfo>('/system/info'),
       api.get<Host[]>('/hosts'),
       api.get<Profile[]>('/profiles'),
+      api.get<NetworkStatus>('/network/status').catch(() => null),
     ])
-      .then(([i, h, p]) => {
+      .then(([i, h, p, n]) => {
         setInfo(i)
         setHosts(h)
         setProfiles(p)
+        setNetStatus(n)
       })
       .catch(setError)
   }, [])
@@ -31,6 +34,17 @@ export function Dashboard() {
   return (
     <>
       <h1>{t('dashboard.title')}</h1>
+      {netStatus?.warnings.map((w) => (
+        <div key={w.code} className="warning-banner">
+          <strong>{t(`warnings.${w.code}`, { defaultValue: w.message })}</strong>
+          {netStatus.dhcpServers.length > 0 && (
+            <div className="muted">
+              {t('dashboard.dhcpServersSeen')}:{' '}
+              {netStatus.dhcpServers.map((s) => s.ip).join(', ')}
+            </div>
+          )}
+        </div>
+      ))}
       <div className="cards">
         <div className="card">
           <div className="stat">{hosts.length}</div>
