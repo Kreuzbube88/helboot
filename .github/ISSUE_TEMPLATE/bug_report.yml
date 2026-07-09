@@ -1,0 +1,108 @@
+name: Bug report
+description: Something isn't working as expected.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please do **not** use this
+        form for security vulnerabilities — see [SECURITY.md](https://github.com/Kreuzbube88/helboot/security/policy)
+        instead.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: HELBOOT version
+      description: Shown on the Dashboard, or the image tag you run (e.g. `1.2.0`, `dev`).
+      placeholder: "1.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment method
+      options:
+        - Docker (docker run / docker compose)
+        - Unraid Community Applications
+        - Other / built from source
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network-mode
+    attributes:
+      label: Network mode
+      description: Settings → Boot network
+      options:
+        - "Mode A — ProxyDHCP (existing DHCP server)"
+        - "Mode B — HELBOOT DHCP"
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: provider
+    attributes:
+      label: Affected provider / operating system
+      description: Only relevant for provisioning, boot or answer-file issues.
+      placeholder: "e.g. ubuntu, windows11, proxmox-ve"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        Copy the relevant entries from the UI log viewer (Logs page), or
+        `docker logs <container>`. This will be rendered as-is, no need for
+        code fences.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help — screenshots, host/browser info, network topology.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: This is not a security vulnerability (those go through SECURITY.md).
+          required: true

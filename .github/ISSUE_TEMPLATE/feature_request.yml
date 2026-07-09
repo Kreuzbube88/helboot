@@ -1,0 +1,72 @@
+name: Feature request
+description: Suggest an enhancement or a new capability.
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a **new operating system / provider**, please use the
+        [Provider request](?template=provider_request.yml) form instead — it
+        asks for the details that actually matter for that (installer type,
+        answer-file format, boot method).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case or limitation you're running into.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you're using today, or other approaches you thought about.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of HELBOOT does this mainly touch?
+      multiple: true
+      options:
+        - Profiles / settings schema
+        - Hosts / discovery
+        - Installation queue
+        - ISO management
+        - Network (DHCP/ProxyDHCP/PXE/boot media)
+        - Users / roles / auth
+        - Backup / restore
+        - Frontend / UI / i18n
+        - Plugin system
+        - Documentation
+        - Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, links, references to similar tools — anything that helps.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true

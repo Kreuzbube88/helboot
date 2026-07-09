@@ -1,0 +1,92 @@
+name: Provider request (new OS support)
+description: Ask for support for an operating system or appliance HELBOOT doesn't provision yet.
+labels: ["provider", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        HELBOOT never hardcodes operating systems — each one is a **provider**:
+        a manifest plus an answer-file template (see
+        [providers/README.md](https://github.com/Kreuzbube88/helboot/blob/main/providers/README.md)
+        and [ADR-0005](https://github.com/Kreuzbube88/helboot/blob/main/docs/adr/0005-provider-capability-architecture.md)).
+        The details below are exactly what's needed to write that manifest —
+        the more you can fill in, the faster this can be implemented.
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system / appliance
+      description: Name and version.
+      placeholder: "e.g. Rocky Linux 9, OPNsense, Alpine Linux"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation method
+      description: How does this OS install itself?
+      options:
+        - Unattended installer from ISO (kickstart / preseed / AutoYaST / autoinstall-style)
+        - Pre-built disk image written to storage (dietpi/HAOS/TrueNAS-style)
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: answer-format
+    attributes:
+      label: Answer-file / unattended-config format
+      description: The format this installer accepts for automation, if known.
+      placeholder: "e.g. kickstart, preseed, cloud-init, a first-boot config file"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: boot-methods
+    attributes:
+      label: Boot methods this OS should support
+      options:
+        - label: PXE
+        - label: HTTP boot
+        - label: USB/CD boot media
+        - label: Secure Boot
+
+  - type: textarea
+    id: detection
+    attributes:
+      label: How can the ISO/image be recognized?
+      description: >
+        Volume label, well-known files/paths inside the image, or other
+        identifying markers the analyzer could match on.
+      placeholder: |
+        Volume ID pattern: "ROCKY*"
+        Marker files: .discinfo, images/install.img
+    validations:
+      required: false
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings this profile would need
+      description: >
+        Language/keyboard, users, network, partitioning, packages, scripts —
+        whatever this installer's automation format supports (ADR-0012).
+    validations:
+      required: false
+
+  - type: textarea
+    id: links
+    attributes:
+      label: Reference links
+      description: Official docs for the unattended-install mechanism, example config files, download page.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and did not find a duplicate request.
+          required: true

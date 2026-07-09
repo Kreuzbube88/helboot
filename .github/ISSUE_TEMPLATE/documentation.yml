@@ -1,0 +1,35 @@
+name: Documentation
+description: Report missing, unclear or incorrect documentation.
+labels: ["documentation", "triage"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Where?
+      description: File and section, or page in the running application.
+      placeholder: "e.g. docs/ARCHITECTURE.md §6, or the Settings page"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong or missing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: If you already know what it should say instead, put it here.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
