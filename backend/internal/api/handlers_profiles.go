@@ -2,9 +2,11 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
+	"github.com/kreuzbube88/helboot/backend/internal/store"
 )
 
 type createProfileRequest struct {
@@ -17,8 +19,11 @@ type createProfileRequest struct {
 type updateProfileRequest struct {
 	Name  string `json:"name"`
 	ISOID *int64 `json:"isoId"`
-	// Config, when present, creates a new immutable profile version (§13).
-	Config json.RawMessage `json:"config"`
+	// Config, when present, edits the current version in place — or
+	// becomes a new immutable version when SaveAsNewVersion is set
+	// (explicit versioning, ADR-0013).
+	Config           json.RawMessage `json:"config"`
+	SaveAsNewVersion bool            `json:"saveAsNewVersion"`
 }
 
 func (s *Server) handleListProfiles(w http.ResponseWriter, _ *http.Request) {
@@ -121,10 +126,18 @@ func (s *Server) handleUpdateProfile(w http.ResponseWriter, r *http.Request) {
 		c := string(req.Config)
 		config = &c
 	}
-	updated, err := s.store.UpdateProfile(id, req.Name, req.ISOID, config)
+	updated, err := s.store.UpdateProfile(id, req.Name, req.ISOID, config, req.SaveAsNewVersion)
+	if errors.Is(err, store.ErrVersionInUse) {
+		writeError(w, http.StatusConflict, "profile.version_in_use",
+			"this version is referenced by an installation; save the change as a new version")
+		return
+	}
 	if err != nil {
 		s.storeError(w, err)
 		return
+	}
+	if req.SaveAsNewVersion {
+		s.audit(r, "profile.new_version", "profile", id)
 	}
 	writeJSON(w, http.StatusOK, updated)
 }

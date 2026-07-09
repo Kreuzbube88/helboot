@@ -12,6 +12,10 @@ import (
 // ErrNotFound is returned when a requested row does not exist.
 var ErrNotFound = errors.New("store: not found")
 
+// ErrVersionInUse is returned when an in-place profile edit would
+// change a version that an installation references (ADR-0013).
+var ErrVersionInUse = errors.New("store: profile version is referenced by an installation")
+
 // timeFormat matches SQLite's datetime('now') output (UTC).
 const timeFormat = "2006-01-02 15:04:05"
 

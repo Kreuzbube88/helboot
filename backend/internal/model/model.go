@@ -62,20 +62,24 @@ type Session struct {
 
 // Host is a machine managed by MAC address.
 type Host struct {
-	ID        int64      `json:"id"`
-	MAC       string     `json:"mac"`
-	Hostname  string     `json:"hostname"`
-	Vendor    string     `json:"vendor"`
-	Model     string     `json:"model"`
-	Serial    string     `json:"serial"`
-	AssetID   string     `json:"assetId"`
-	Tags      []string   `json:"tags"`
-	Firmware  string     `json:"firmware"` // "bios" or "uefi"
-	Arch      string     `json:"arch"`     // e.g. "x86_64", "arm64"
-	ProfileID *int64     `json:"profileId"`
-	Status    HostStatus `json:"status"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
+	ID        int64    `json:"id"`
+	MAC       string   `json:"mac"`
+	Hostname  string   `json:"hostname"`
+	Vendor    string   `json:"vendor"`
+	Model     string   `json:"model"`
+	Serial    string   `json:"serial"`
+	AssetID   string   `json:"assetId"`
+	Tags      []string `json:"tags"`
+	Firmware  string   `json:"firmware"` // "bios" or "uefi"
+	Arch      string   `json:"arch"`     // e.g. "x86_64", "arm64"
+	ProfileID *int64   `json:"profileId"`
+	// ProfileVersion pins the profile version this host installs
+	// (ADR-0013); 0 while no profile is assigned. Never an implicit
+	// "latest": assigning a profile pins its then-current version.
+	ProfileVersion int        `json:"profileVersion"`
+	Status         HostStatus `json:"status"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
 }
 
 // HostStatus describes where a host is in its lifecycle.

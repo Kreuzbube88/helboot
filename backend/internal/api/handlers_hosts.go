@@ -1,11 +1,13 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/kreuzbube88/helboot/backend/internal/model"
 	"github.com/kreuzbube88/helboot/backend/internal/netutil"
+	"github.com/kreuzbube88/helboot/backend/internal/store"
 )
 
 // hostRequest is the writable subset of a host (§14).
@@ -20,6 +22,9 @@ type hostRequest struct {
 	Firmware  string   `json:"firmware"`
 	Arch      string   `json:"arch"`
 	ProfileID *int64   `json:"profileId"`
+	// ProfileVersion pins a profile version (ADR-0013); 0 or absent
+	// pins the profile's current version at assignment time.
+	ProfileVersion int `json:"profileVersion"`
 }
 
 // validate normalizes the MAC and checks enum fields. Returns false
@@ -51,6 +56,40 @@ func (req *hostRequest) apply(h *model.Host) {
 	h.Firmware = req.Firmware
 	h.Arch = req.Arch
 	h.ProfileID = req.ProfileID
+	h.ProfileVersion = req.ProfileVersion
+}
+
+// resolveProfilePin validates the profile assignment and pins a
+// concrete version: the requested one if it exists, otherwise the
+// profile's current version (ADR-0013). Returns false after writing
+// the error response.
+func (s *Server) resolveProfilePin(w http.ResponseWriter, req *hostRequest) bool {
+	if req.ProfileID == nil {
+		req.ProfileVersion = 0
+		return true
+	}
+	profile, err := s.store.ProfileByID(*req.ProfileID)
+	if errors.Is(err, store.ErrNotFound) {
+		writeError(w, http.StatusBadRequest, "host.unknown_profile", "unknown profile")
+		return false
+	}
+	if err != nil {
+		s.internalError(w, err)
+		return false
+	}
+	if req.ProfileVersion == 0 {
+		req.ProfileVersion = profile.CurrentVersion
+		return true
+	}
+	if _, err := s.store.ProfileVersionNumber(profile.ID, req.ProfileVersion); errors.Is(err, store.ErrNotFound) {
+		writeError(w, http.StatusBadRequest, "host.unknown_profile_version",
+			"the profile has no such version")
+		return false
+	} else if err != nil {
+		s.internalError(w, err)
+		return false
+	}
+	return true
 }
 
 func (s *Server) handleListHosts(w http.ResponseWriter, _ *http.Request) {
@@ -64,7 +103,7 @@ func (s *Server) handleListHosts(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) handleCreateHost(w http.ResponseWriter, r *http.Request) {
 	var req hostRequest
-	if !decodeJSON(w, r, &req) || !req.validate(w) {
+	if !decodeJSON(w, r, &req) || !req.validate(w) || !s.resolveProfilePin(w, &req) {
 		return
 	}
 	if _, err := s.store.HostByMAC(req.MAC); err == nil {
@@ -107,7 +146,7 @@ func (s *Server) handleUpdateHost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req hostRequest
-	if !decodeJSON(w, r, &req) || !req.validate(w) {
+	if !decodeJSON(w, r, &req) || !req.validate(w) || !s.resolveProfilePin(w, &req) {
 		return
 	}
 	req.apply(existing)

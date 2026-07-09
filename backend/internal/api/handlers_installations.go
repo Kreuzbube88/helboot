@@ -81,9 +81,15 @@ func (s *Server) handleCreateInstallation(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Installations pin the profile's current version snapshot so later
-	// profile edits never change what a queued host installs (§13).
-	version, err := s.store.ProfileVersionNumber(profile.ID, profile.CurrentVersion)
+	// Installations pin a version snapshot so later profile edits never
+	// change what a queued host installs (ADR-0013): the host's pinned
+	// version when its assigned profile is used, the profile's current
+	// version for an explicit override.
+	versionNumber := profile.CurrentVersion
+	if req.ProfileID == nil && host.ProfileVersion > 0 {
+		versionNumber = host.ProfileVersion
+	}
+	version, err := s.store.ProfileVersionNumber(profile.ID, versionNumber)
 	if err != nil {
 		s.internalError(w, err)
 		return

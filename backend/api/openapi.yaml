@@ -414,7 +414,11 @@ paths:
     put:
       tags: [profiles]
       summary: Update a profile (operator)
-      description: Sending `config` appends a new immutable version.
+      description: >
+        Sending `config` edits the current version in place; with
+        `saveAsNewVersion` it becomes an immutable new version
+        (ADR-0013). In-place edits of a version referenced by an
+        installation are refused with 409.
       requestBody:
         required: true
         content:
@@ -426,6 +430,7 @@ paths:
                 name: { type: string }
                 isoId: { type: [integer, "null"] }
                 config: { type: object }
+                saveAsNewVersion: { type: boolean, default: false }
       responses:
         "200":
           description: Updated
@@ -433,6 +438,11 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Profile" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Version is referenced by an installation (`profile.version_in_use`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
     delete:
       tags: [profiles]
       summary: Delete a profile (operator)
@@ -826,6 +836,12 @@ components:
         firmware: { type: string, enum: ["", bios, uefi] }
         arch: { type: string }
         profileId: { type: [integer, "null"] }
+        profileVersion:
+          type: integer
+          description: >
+            Pinned profile version (ADR-0013). 0 or absent pins the
+            profile's current version at assignment time; hosts never
+            follow an implicit "latest".
 
     Host:
       allOf:

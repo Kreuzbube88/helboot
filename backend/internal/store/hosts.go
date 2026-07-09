@@ -18,10 +18,10 @@ func (s *Store) CreateHost(h model.Host) (*model.Host, error) {
 		return nil, err
 	}
 	res, err := s.db.Exec(
-		`INSERT INTO hosts (mac, hostname, vendor, model, serial, asset_id, tags, firmware, arch, profile_id, status)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO hosts (mac, hostname, vendor, model, serial, asset_id, tags, firmware, arch, profile_id, profile_version, status)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		h.MAC, h.Hostname, h.Vendor, h.Model, h.Serial, h.AssetID, string(tags),
-		h.Firmware, h.Arch, h.ProfileID, string(h.Status),
+		h.Firmware, h.Arch, h.ProfileID, h.ProfileVersion, string(h.Status),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create host: %w", err)
@@ -86,10 +86,10 @@ func (s *Store) UpdateHost(h model.Host) (*model.Host, error) {
 	}
 	res, err := s.db.Exec(
 		`UPDATE hosts SET mac = ?, hostname = ?, vendor = ?, model = ?, serial = ?, asset_id = ?,
-		 tags = ?, firmware = ?, arch = ?, profile_id = ?, status = ?, updated_at = ?
+		 tags = ?, firmware = ?, arch = ?, profile_id = ?, profile_version = ?, status = ?, updated_at = ?
 		 WHERE id = ?`,
 		h.MAC, h.Hostname, h.Vendor, h.Model, h.Serial, h.AssetID, string(tags),
-		h.Firmware, h.Arch, h.ProfileID, string(h.Status), formatTime(time.Now()), h.ID,
+		h.Firmware, h.Arch, h.ProfileID, h.ProfileVersion, string(h.Status), formatTime(time.Now()), h.ID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("update host: %w", err)
@@ -113,14 +113,14 @@ func (s *Store) DeleteHost(id int64) error {
 }
 
 const hostSelect = `SELECT id, mac, hostname, vendor, model, serial, asset_id, tags,
-	firmware, arch, profile_id, status, created_at, updated_at FROM hosts`
+	firmware, arch, profile_id, profile_version, status, created_at, updated_at FROM hosts`
 
 func scanHost(rows *sql.Rows) (*model.Host, error) {
 	var h model.Host
 	var tags, status, createdAt, updatedAt string
 	var profileID sql.NullInt64
 	err := rows.Scan(&h.ID, &h.MAC, &h.Hostname, &h.Vendor, &h.Model, &h.Serial,
-		&h.AssetID, &tags, &h.Firmware, &h.Arch, &profileID, &status, &createdAt, &updatedAt)
+		&h.AssetID, &tags, &h.Firmware, &h.Arch, &profileID, &h.ProfileVersion, &status, &createdAt, &updatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}

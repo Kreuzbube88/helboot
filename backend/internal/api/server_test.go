@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kreuzbube88/helboot/backend/internal/boot"
@@ -310,7 +311,7 @@ func TestProfileVersioning(t *testing.T) {
 		t.Fatalf("create profile: status %d: %s", resp.StatusCode, body)
 	}
 
-	// Updating with a config appends version 2.
+	// Updating with a config edits version 1 in place (ADR-0013).
 	resp, body = c.do(http.MethodPut, "/api/v1/profiles/1", map[string]any{
 		"name": "Debian Base", "config": map[string]any{"language": "en"},
 	})
@@ -321,8 +322,21 @@ func TestProfileVersioning(t *testing.T) {
 		CurrentVersion int `json:"currentVersion"`
 	}
 	json.Unmarshal(body, &p)
+	if p.CurrentVersion != 1 {
+		t.Errorf("in-place edit: currentVersion = %d, want 1", p.CurrentVersion)
+	}
+
+	// Saving as a new version is the explicit trigger for version 2.
+	resp, body = c.do(http.MethodPut, "/api/v1/profiles/1", map[string]any{
+		"name": "Debian Base", "config": map[string]any{"language": "fr"},
+		"saveAsNewVersion": true,
+	})
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("save new version: status %d: %s", resp.StatusCode, body)
+	}
+	json.Unmarshal(body, &p)
 	if p.CurrentVersion != 2 {
-		t.Errorf("currentVersion = %d, want 2", p.CurrentVersion)
+		t.Errorf("new version: currentVersion = %d, want 2", p.CurrentVersion)
 	}
 
 	resp, body = c.do(http.MethodGet, "/api/v1/profiles/1/versions", nil)
@@ -330,11 +344,53 @@ func TestProfileVersioning(t *testing.T) {
 		t.Fatalf("versions: status %d", resp.StatusCode)
 	}
 	var versions []struct {
-		Version int `json:"version"`
+		Version int    `json:"version"`
+		Config  string `json:"config"`
 	}
 	json.Unmarshal(body, &versions)
 	if len(versions) != 2 {
-		t.Errorf("got %d versions, want 2", len(versions))
+		t.Fatalf("got %d versions, want 2", len(versions))
+	}
+	if !strings.Contains(versions[0].Config, `"en"`) {
+		t.Errorf("version 1 config = %s, want the in-place edit", versions[0].Config)
+	}
+
+	// Once an installation references the head version, in-place edits
+	// are refused — history must stay immutable.
+	resp, body = c.do(http.MethodPost, "/api/v1/hosts", map[string]any{
+		"mac": "aa:bb:cc:dd:ee:10", "profileId": 1,
+	})
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("create host: status %d: %s", resp.StatusCode, body)
+	}
+	var host struct {
+		ID             int64 `json:"id"`
+		ProfileVersion int   `json:"profileVersion"`
+	}
+	json.Unmarshal(body, &host)
+	if host.ProfileVersion != 2 {
+		t.Errorf("host pin = %d, want current version 2", host.ProfileVersion)
+	}
+	resp, body = c.do(http.MethodPost, "/api/v1/installations", map[string]any{"hostId": host.ID})
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("queue installation: status %d: %s", resp.StatusCode, body)
+	}
+	resp, _ = c.do(http.MethodPut, "/api/v1/profiles/1", map[string]any{
+		"name": "Debian Base", "config": map[string]any{"language": "it"},
+	})
+	if resp.StatusCode != http.StatusConflict {
+		t.Errorf("in-place edit of referenced version: status %d, want 409", resp.StatusCode)
+	}
+	resp, body = c.do(http.MethodPut, "/api/v1/profiles/1", map[string]any{
+		"name": "Debian Base", "config": map[string]any{"language": "it"},
+		"saveAsNewVersion": true,
+	})
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("save new version after conflict: status %d: %s", resp.StatusCode, body)
+	}
+	json.Unmarshal(body, &p)
+	if p.CurrentVersion != 3 {
+		t.Errorf("after conflict: currentVersion = %d, want 3", p.CurrentVersion)
 	}
 }
 

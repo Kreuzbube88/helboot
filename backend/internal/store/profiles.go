@@ -73,9 +73,12 @@ func (s *Store) ProfileByID(id int64) (*model.Profile, error) {
 	return scanProfile(rows)
 }
 
-// UpdateProfile updates profile metadata and, when config is non-nil,
-// appends a new immutable version snapshot (versioning, §13).
-func (s *Store) UpdateProfile(id int64, name string, isoID *int64, config *string) (*model.Profile, error) {
+// UpdateProfile updates profile metadata and applies a config change
+// according to the explicit-versioning rules (ADR-0013): by default the
+// head version is edited in place; with newVersion the config becomes
+// an immutable version N+1. In-place edits are refused with
+// ErrVersionInUse once any installation references the head version.
+func (s *Store) UpdateProfile(id int64, name string, isoID *int64, config *string, newVersion bool) (*model.Profile, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
@@ -94,21 +97,12 @@ func (s *Store) UpdateProfile(id int64, name string, isoID *int64, config *strin
 	}
 
 	if config != nil {
-		var next int
-		if err := tx.QueryRow(
-			`SELECT COALESCE(MAX(version), 0) + 1 FROM profile_versions WHERE profile_id = ?`, id,
-		).Scan(&next); err != nil {
-			return nil, err
+		if newVersion {
+			err = appendProfileVersion(tx, id, *config)
+		} else {
+			err = editHeadVersion(tx, id, *config)
 		}
-		if _, err := tx.Exec(
-			`INSERT INTO profile_versions (profile_id, version, config) VALUES (?, ?, ?)`,
-			id, next, *config,
-		); err != nil {
-			return nil, fmt.Errorf("append profile version: %w", err)
-		}
-		if _, err := tx.Exec(
-			`UPDATE profiles SET current_version = ? WHERE id = ?`, next, id,
-		); err != nil {
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -116,6 +110,57 @@ func (s *Store) UpdateProfile(id int64, name string, isoID *int64, config *strin
 		return nil, err
 	}
 	return s.ProfileByID(id)
+}
+
+// appendProfileVersion snapshots config as the next version and makes
+// it the profile's current one.
+func appendProfileVersion(tx *sql.Tx, profileID int64, config string) error {
+	var next int
+	if err := tx.QueryRow(
+		`SELECT COALESCE(MAX(version), 0) + 1 FROM profile_versions WHERE profile_id = ?`, profileID,
+	).Scan(&next); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(
+		`INSERT INTO profile_versions (profile_id, version, config) VALUES (?, ?, ?)`,
+		profileID, next, config,
+	); err != nil {
+		return fmt.Errorf("append profile version: %w", err)
+	}
+	if _, err := tx.Exec(
+		`UPDATE profiles SET current_version = ? WHERE id = ?`, next, profileID,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+// editHeadVersion overwrites the current version's config in place —
+// only while no installation references it (history stays immutable).
+func editHeadVersion(tx *sql.Tx, profileID int64, config string) error {
+	var headID int64
+	if err := tx.QueryRow(
+		`SELECT pv.id FROM profile_versions pv
+		 JOIN profiles p ON p.id = pv.profile_id AND p.current_version = pv.version
+		 WHERE pv.profile_id = ?`, profileID,
+	).Scan(&headID); err != nil {
+		return fmt.Errorf("head version: %w", err)
+	}
+	var refs int
+	if err := tx.QueryRow(
+		`SELECT COUNT(*) FROM installations WHERE profile_version_id = ?`, headID,
+	).Scan(&refs); err != nil {
+		return err
+	}
+	if refs > 0 {
+		return ErrVersionInUse
+	}
+	if _, err := tx.Exec(
+		`UPDATE profile_versions SET config = ? WHERE id = ?`, config, headID,
+	); err != nil {
+		return fmt.Errorf("edit profile version: %w", err)
+	}
+	return nil
 }
 
 // DeleteProfile removes a profile and all its versions (cascade).
