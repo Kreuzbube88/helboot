@@ -16,3 +16,8 @@ Significant technical decisions in HELBOOT are documented as ADRs
 | [0009](0009-single-docker-image.md) | One Docker image, one container, one supervisor | Accepted |
 | [0010](0010-api-first-rest-openapi.md) | API-first: versioned REST with OpenAPI contract | Accepted |
 | [0011](0011-network-protocol-libraries.md) | Network protocol libraries and iPXE distribution | Accepted |
+| [0012](0012-provider-settings-schema.md) | Declarative settings schema per provider | Accepted |
+| [0013](0013-profile-versioning.md) | Explicit profile versioning and host version pinning | Accepted |
+| [0014](0014-answer-file-preview-and-override.md) | Answer-file templates, preview and manual override | Accepted |
+| [0015](0015-sqlite-concurrency.md) | SQLite concurrency — WAL and a single writer | Accepted |
+| [0016](0016-network-mode-changes-and-rogue-dhcp.md) | Network-mode changes and rogue-DHCP detection | Accepted |

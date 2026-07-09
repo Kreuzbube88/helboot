@@ -35,3 +35,47 @@ runtime:
   documented limitation.
 - Interfaces live in dedicated packages so a future runtime can adopt
   them without breaking implementations.
+
+## Amendment (2026-07-09): contract, load locations, UI question
+
+The original decision left three questions open; they are answered
+here.
+
+### What may a plugin extend?
+
+| Extension surface | Plugin kind | v1 mechanism |
+| ----------------- | ----------- | ------------ |
+| New operating system / OS version | **Provider** (data plugin) | YAML manifest + templates + settings schema (ADR-0005, ADR-0012); no code |
+| New boot method (VM, Redfish, IPMI, …) | `plugin.BootMethod` | Go interface, compile-time registration |
+| New auth provider (OIDC, LDAP, …) | `plugin.IdentityProvider` | Go interface, compile-time registration |
+| New answer-file format | `plugin.AnswerFileRenderer` | Go interface, compile-time registration |
+| Post-v1: notifications, software repositories | future interfaces | new ADR when they land |
+
+Anything not in this table — middleware, storage engines, arbitrary
+API routes — is deliberately **not** a plugin surface.
+
+### UI extension points: no
+
+Plugins do **not** ship UI code. The frontend renders everything from
+data the backend serves: capabilities decide which options exist
+(ADR-0005), the settings schema generates the profile form (ADR-0012).
+That declarative surface *is* the UI extension mechanism. Injectable
+frontend code (module federation, iframes) would break the i18n rule,
+the security model and offline packaging for marginal gain; if a
+future plugin genuinely needs custom UI, that requires its own ADR.
+
+### Contract and load locations
+
+- The minimal contract is the interface set in
+  `backend/internal/plugin` — construction from a config value, a
+  stable `Name()`, and the interface methods. Registration happens in
+  `cmd/helboot` wiring at compile time; there is no init()-magic or
+  global registry to keep implementations testable.
+- **Providers** (the only runtime-loadable plugin kind) are loaded from
+  two locations, later wins on name collision:
+  1. the shipped `providers/` directory in the image,
+  2. `/data/providers/` on the data volume — users drop in new or
+     patched providers without rebuilding the image.
+  A manifest that fails validation disables only that provider.
+- Go-interface plugins are compiled in; their *selection* (e.g. which
+  identity provider is active) is configuration, not code.
