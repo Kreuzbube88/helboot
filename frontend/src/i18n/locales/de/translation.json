@@ -65,7 +65,14 @@
     "providers": "Provider",
     "version": "Version",
     "networkMode": "Netzwerkmodus",
-    "dhcpServersSeen": "Gesehene DHCP-Server"
+    "dhcpServersSeen": "Gesehene DHCP-Server",
+    "hostsByStatus": "Hosts nach Status",
+    "recentInstallations": "Letzte Installationen",
+    "quickLinks": "Schnellzugriff",
+    "quickLinkHosts": "Maschinen registrieren und Profile zuweisen.",
+    "quickLinkProfiles": "Installationsrezepte erstellen und bearbeiten.",
+    "quickLinkIsos": "ISOs hochladen und das Betriebssystem automatisch erkennen lassen.",
+    "quickLinkInstallations": "Geplante und abgeschlossene Installationen verfolgen."
   },
   "warnings": {
     "network": {

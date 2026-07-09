@@ -65,7 +65,14 @@
     "providers": "Providers",
     "version": "Version",
     "networkMode": "Network mode",
-    "dhcpServersSeen": "DHCP servers seen"
+    "dhcpServersSeen": "DHCP servers seen",
+    "hostsByStatus": "Hosts by status",
+    "recentInstallations": "Recent installations",
+    "quickLinks": "Quick links",
+    "quickLinkHosts": "Register machines and assign profiles.",
+    "quickLinkProfiles": "Create and edit installation recipes.",
+    "quickLinkIsos": "Upload ISOs and let HELBOOT detect the OS.",
+    "quickLinkInstallations": "Track queued and finished installations."
   },
   "warnings": {
     "network": {
