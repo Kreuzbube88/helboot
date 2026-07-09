@@ -18,6 +18,9 @@ import (
 type ProxyDHCP struct {
 	log *slog.Logger
 	cfg BootConfig
+	// Observer, when set, records foreign DHCP servers seen in client
+	// broadcasts (ADR-0016). Nil-safe.
+	Observer *DHCPObserver
 	// ports are configurable for tests; zero values mean 67/4011.
 	port67, port4011 int
 }
@@ -65,6 +68,9 @@ func (p *ProxyDHCP) Run(ctx context.Context) error {
 // the final ACK with the boot file.
 func (p *ProxyDHCP) handler(isPort67 bool) server4.Handler {
 	return func(conn net.PacketConn, peer net.Addr, req *dhcpv4.DHCPv4) {
+		if isPort67 {
+			p.Observer.Observe(req)
+		}
 		reply := p.buildReply(req, isPort67)
 		if reply == nil {
 			return

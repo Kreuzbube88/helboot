@@ -28,8 +28,9 @@ const (
 
 // buildNetworkServices assembles the boot-network services for the
 // configured mode (ADR-0006). Before the first-run wizard completed, no
-// network services run — only the web UI is up.
-func buildNetworkServices(cfg config.Config, st *store.Store, log *slog.Logger) []service.Service {
+// network services run — only the web UI is up. The observer receives
+// DHCP sightings for rogue-server detection (ADR-0016).
+func buildNetworkServices(cfg config.Config, st *store.Store, log *slog.Logger, observer *network.DHCPObserver) []service.Service {
 	completed, err := st.SetupCompleted()
 	if err != nil {
 		log.Error("cannot read setup state; network services disabled", "error", err)
@@ -46,6 +47,7 @@ func buildNetworkServices(cfg config.Config, st *store.Store, log *slog.Logger) 
 			"hint", "set the server IP in the network settings")
 		return nil
 	}
+	observer.SetSelfIP(serverIP)
 	bootCfg := network.BootConfig{
 		ServerIP:  serverIP,
 		ScriptURL: fmt.Sprintf("http://%s/boot/ipxe", net.JoinHostPort(serverIP.String(), httpPort(cfg.HTTPAddr))),
@@ -59,15 +61,18 @@ func buildNetworkServices(cfg config.Config, st *store.Store, log *slog.Logger) 
 	switch mode {
 	case "dhcp":
 		if dhcpSrv := buildDHCPServer(st, log, bootCfg); dhcpSrv != nil {
+			dhcpSrv.Observer = observer
 			services = append(services, dhcpSrv)
 		}
 	default: // proxy_dhcp is the safe default (never assigns addresses)
-		services = append(services, network.NewProxyDHCP(log, bootCfg))
+		proxy := network.NewProxyDHCP(log, bootCfg)
+		proxy.Observer = observer
+		services = append(services, proxy)
 	}
 	return services
 }
 
-func buildDHCPServer(st *store.Store, log *slog.Logger, bootCfg network.BootConfig) service.Service {
+func buildDHCPServer(st *store.Store, log *slog.Logger, bootCfg network.BootConfig) *network.DHCPServer {
 	start := net.ParseIP(getSetting(st, settingDHCPStart))
 	end := net.ParseIP(getSetting(st, settingDHCPEnd))
 	if start == nil || end == nil {

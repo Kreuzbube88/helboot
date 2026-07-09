@@ -466,6 +466,38 @@ paths:
                 items: { $ref: "#/components/schemas/ProfileVersion" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /network/status:
+    get:
+      tags: [network]
+      summary: Observed DHCP servers and rogue-DHCP warnings
+      description: >
+        Passive sightings of foreign DHCP servers (from client
+        DHCPREQUEST broadcasts) within the last 30 minutes, plus the
+        warnings derived for the active mode (ADR-0016).
+      responses:
+        "200":
+          description: Current network observations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode: { type: string, enum: ["", proxy_dhcp, dhcp] }
+                  dhcpServers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ip: { type: string }
+                        lastSeen: { type: string, format: date-time }
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code: { type: string, description: Stable identifier, doubles as i18n key }
+                        message: { type: string }
+
   /profiles/{id}/versions/{version}/answer:
     get:
       tags: [profiles]

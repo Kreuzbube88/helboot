@@ -22,6 +22,7 @@ import (
 	"github.com/kreuzbube88/helboot/backend/internal/db"
 	"github.com/kreuzbube88/helboot/backend/internal/iso"
 	"github.com/kreuzbube88/helboot/backend/internal/logging"
+	"github.com/kreuzbube88/helboot/backend/internal/network"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/service"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
@@ -82,19 +83,24 @@ func run() error {
 		return err
 	}
 
+	// The observer collects DHCP-server sightings from the network
+	// services; the API derives rogue-DHCP warnings from it (ADR-0016).
+	dhcpObserver := network.NewDHCPObserver(log)
+
 	isoManager := iso.NewManager(log, filepath.Join(cfg.DataDir, "isos"), st, registry)
 	server := apihttp.New(apihttp.Deps{
-		Log:         log,
-		Store:       st,
-		Registry:    registry,
-		Version:     version,
-		OpenAPISpec: api.OpenAPISpec,
-		StaticFiles: web.Handler(),
-		Boot:        boot.New(log, st, registry, isoManager, cfg.AssetsPath(), cfg.ProvidersDir),
-		ISOs:        isoManager,
-		Backup:      backup.NewManager(sqlDB, cfg.DataDir, version),
-		LogRing:     logRing,
-		AssetsDir:   cfg.AssetsPath(),
+		Log:          log,
+		Store:        st,
+		Registry:     registry,
+		Version:      version,
+		OpenAPISpec:  api.OpenAPISpec,
+		StaticFiles:  web.Handler(),
+		Boot:         boot.New(log, st, registry, isoManager, cfg.AssetsPath(), cfg.ProvidersDir),
+		ISOs:         isoManager,
+		Backup:       backup.NewManager(sqlDB, cfg.DataDir, version),
+		LogRing:      logRing,
+		AssetsDir:    cfg.AssetsPath(),
+		DHCPObserver: dhcpObserver,
 	})
 	httpServer := &http.Server{
 		Addr:              cfg.HTTPAddr,
@@ -109,7 +115,7 @@ func run() error {
 	// this same process (ADR-0009). Configuration changes require a
 	// restart, which the API reports to the UI.
 	manager := service.NewManager(log)
-	for _, svc := range buildNetworkServices(cfg, st, log) {
+	for _, svc := range buildNetworkServices(cfg, st, log, dhcpObserver) {
 		manager.Add(svc)
 	}
 	managerDone := make(chan struct{})

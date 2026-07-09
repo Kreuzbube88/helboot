@@ -23,9 +23,12 @@ type DHCPConfig struct {
 // (Mode B). PXE options are attached to every offer/ack so a separate
 // ProxyDHCP service is unnecessary in this mode.
 type DHCPServer struct {
-	log  *slog.Logger
-	cfg  DHCPConfig
-	port int
+	log *slog.Logger
+	cfg DHCPConfig
+	// Observer, when set, records foreign DHCP servers answering on
+	// HELBOOT's segment (ADR-0016). Nil-safe.
+	Observer *DHCPObserver
+	port     int
 }
 
 // NewDHCPServer creates the Mode B service.
@@ -55,6 +58,7 @@ func (d *DHCPServer) Run(ctx context.Context) error {
 }
 
 func (d *DHCPServer) handle(conn net.PacketConn, peer net.Addr, req *dhcpv4.DHCPv4) {
+	d.Observer.Observe(req)
 	reply := d.buildReply(req)
 	if reply == nil {
 		return

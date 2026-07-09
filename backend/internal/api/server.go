@@ -13,6 +13,7 @@ import (
 	"github.com/kreuzbube88/helboot/backend/internal/iso"
 	"github.com/kreuzbube88/helboot/backend/internal/logging"
 	"github.com/kreuzbube88/helboot/backend/internal/model"
+	"github.com/kreuzbube88/helboot/backend/internal/network"
 	"github.com/kreuzbube88/helboot/backend/internal/provider"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
 )
@@ -38,6 +39,9 @@ type Deps struct {
 	// AssetsDir is the boot assets root; used to serve downloadable
 	// USB/CD boot media (§21).
 	AssetsDir string
+	// DHCPObserver feeds the network-status endpoint with foreign
+	// DHCP-server sightings (ADR-0016); nil disables the warnings.
+	DHCPObserver *network.DHCPObserver
 }
 
 // Server wires the HTTP routes to the application services.
@@ -53,6 +57,7 @@ type Server struct {
 	backup       *backup.Manager
 	logRing      *logging.Ring
 	assetsDir    string
+	dhcpObserver *network.DHCPObserver
 	loginLimiter *rateLimiter
 	handler      http.Handler
 }
@@ -60,17 +65,18 @@ type Server struct {
 // New builds the API server from its dependencies.
 func New(d Deps) *Server {
 	s := &Server{
-		log:         d.Log,
-		store:       d.Store,
-		registry:    d.Registry,
-		version:     d.Version,
-		openAPISpec: d.OpenAPISpec,
-		staticFiles: d.StaticFiles,
-		boot:        d.Boot,
-		isos:        d.ISOs,
-		backup:      d.Backup,
-		logRing:     d.LogRing,
-		assetsDir:   d.AssetsDir,
+		log:          d.Log,
+		store:        d.Store,
+		registry:     d.Registry,
+		version:      d.Version,
+		openAPISpec:  d.OpenAPISpec,
+		staticFiles:  d.StaticFiles,
+		boot:         d.Boot,
+		isos:         d.ISOs,
+		backup:       d.Backup,
+		logRing:      d.LogRing,
+		assetsDir:    d.AssetsDir,
+		dhcpObserver: d.DHCPObserver,
 		// 5 attempts immediately, then one attempt every 2 seconds per
 		// client IP — brute-force protection on login (§29).
 		loginLimiter: newRateLimiter(5, 2*time.Second),
@@ -131,6 +137,7 @@ func (s *Server) buildRoutes() http.Handler {
 
 	mux.Handle("GET /api/v1/network/config", s.require(model.RoleViewer, s.handleGetNetworkConfig))
 	mux.Handle("PUT /api/v1/network/config", s.require(model.RoleAdmin, s.handlePutNetworkConfig))
+	mux.Handle("GET /api/v1/network/status", s.require(model.RoleViewer, s.handleNetworkStatus))
 
 	mux.Handle("GET /api/v1/profiles", s.require(model.RoleViewer, s.handleListProfiles))
 	mux.Handle("POST /api/v1/profiles", s.require(model.RoleOperator, s.handleCreateProfile))

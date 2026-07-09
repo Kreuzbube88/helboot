@@ -4,7 +4,9 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/kreuzbube88/helboot/backend/internal/network"
 	"github.com/kreuzbube88/helboot/backend/internal/store"
 )
 
@@ -97,6 +99,55 @@ func (s *Server) handlePutNetworkConfig(w http.ResponseWriter, r *http.Request) 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"saved":           true,
 		"restartRequired": true,
+	})
+}
+
+// observationWindow bounds how long a DHCP-server sighting stays
+// relevant for warnings (ADR-0016).
+const observationWindow = 30 * time.Minute
+
+// networkWarning is a machine-readable warning; code doubles as the
+// i18n key for the UI.
+type networkWarning struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// handleNetworkStatus reports observed DHCP servers and the warnings
+// derived from them for the active mode (ADR-0016): in Mode A more than
+// one foreign server is suspicious, in Mode B any foreign server is.
+func (s *Server) handleNetworkStatus(w http.ResponseWriter, _ *http.Request) {
+	mode, err := s.store.GetSetting(store.SettingNetworkMode)
+	if err != nil && err != store.ErrNotFound {
+		s.internalError(w, err)
+		return
+	}
+
+	sightings := []network.ServerSighting{}
+	if s.dhcpObserver != nil {
+		sightings = s.dhcpObserver.Sightings(observationWindow)
+	}
+	warnings := []networkWarning{}
+	switch mode {
+	case "dhcp":
+		if len(sightings) >= 1 {
+			warnings = append(warnings, networkWarning{
+				Code:    "network.rogue_dhcp_server",
+				Message: "another DHCP server is answering on this network although HELBOOT is the DHCP server",
+			})
+		}
+	default: // Mode A: exactly one foreign server (the router) is expected
+		if len(sightings) >= 2 {
+			warnings = append(warnings, networkWarning{
+				Code:    "network.multiple_dhcp_servers",
+				Message: "more than one DHCP server is answering on this network; PXE boot may be unreliable",
+			})
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"mode":        mode,
+		"dhcpServers": sightings,
+		"warnings":    warnings,
 	})
 }
 
