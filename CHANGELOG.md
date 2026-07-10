@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-10
+
+### Fixed
+
+- Windows network installs failing at the WinPE stage with
+  `.../boot/assets/wimboot ... Not found`: the `wimboot` binary was never
+  fetched into the image, and even once fetched would have been seeded
+  into the wrong directory (`assets/tftp/` instead of the assets root
+  that `/boot/assets/` serves from).
+- The Windows provider manifests (Windows 10, 11, Server 2022, Server
+  2025) were missing the `initrd` entries wimboot needs (`BCD`,
+  `boot.sdi`, `boot.wim`), so WinPE had nothing to boot even once
+  wimboot itself was reachable.
+- Windows 11 ISOs being misdetected as Windows 10: both share the
+  `CCCOMA_X64FRE*` volume label on Microsoft's media, and ISO detection
+  picked the first alphabetically registered provider on a tie. Detection
+  now breaks such ties using provider-specific marker files.
+
+## [1.0.0] - 2026-07-09
+
 ### Added
 
 - Boot network services running supervised inside the single binary:
@@ -35,7 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   PXE-capable firmware.
 - Audit log entries for privileged actions and failed logins.
 - Unraid template icon.
-
 - Project architecture, component model and Architecture Decision Records.
 - Go backend scaffolding: configuration, structured logging, SQLite with
   embedded migrations, session-based authentication with Argon2id password
@@ -51,3 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI pipeline: build, tests, lint, security scanning, dependency updates.
 - Open source project files: contribution guide, code of conduct,
   security policy, support guide.
+
+[Unreleased]: https://github.com/Kreuzbube88/helboot/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/Kreuzbube88/helboot/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Kreuzbube88/helboot/releases/tag/v1.0.0

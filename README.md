@@ -22,14 +22,9 @@ PXE is just one boot method. The architecture is built to grow: iPXE,
 HTTP boot, USB boot images, VM provisioning, cloud-init, Redfish and IPMI
 are all part of the roadmap.
 
-> ✅ **Status:** **v1.0.0 is live** — image published on GHCR
-> (`:latest` / `:1.0.0`). Implemented: the full network boot chain
-> (ProxyDHCP/DHCP, TFTP, iPXE scripts, answer files), ISO management
-> with automatic OS detection, the installation queue, host discovery,
-> user management with roles, backup/restore, a log viewer and USB/CD
-> boot media — all behind a bilingual (en/de) web UI. Still a young
-> project; see [SECURITY.md](SECURITY.md) for the threat model,
-> [CHANGELOG.md](CHANGELOG.md) for release notes, and
+> ℹ️ Docker images are published on GHCR (`:latest` and a tag per
+> version). See [CHANGELOG.md](CHANGELOG.md) for release notes and
+> version history, [SECURITY.md](SECURITY.md) for the threat model, and
 > [ARCHITECTURE.md](docs/ARCHITECTURE.md) / the [ADRs](docs/adr/) for
 > the design.
 
@@ -121,7 +116,7 @@ docker run -d \
   ghcr.io/kreuzbube88/helboot:latest
 ```
 
-Pin an explicit version instead of `:latest` (e.g. `:1.0.0`) if you
+Pin an explicit version instead of `:latest` (e.g. `:1.0.1`) if you
 prefer controlled, deliberate upgrades — see
 [CHANGELOG.md](CHANGELOG.md) for what changed between releases.
 
