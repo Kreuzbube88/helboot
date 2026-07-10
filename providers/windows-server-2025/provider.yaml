@@ -67,9 +67,17 @@ detection:
 boot:
   pxe:
     kernel: wimboot
+    initrd:
+      - "boot/bcd=BCD"
+      - "boot/boot.sdi"
+      - "sources/boot.wim"
     requires: [winpe]
   http_boot:
     kernel: wimboot
+    initrd:
+      - "boot/bcd=BCD"
+      - "boot/boot.sdi"
+      - "sources/boot.wim"
     requires: [winpe]
 notes: >
   Shares the Server 2022 mechanics; differentiated from 2022 by the

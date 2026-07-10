@@ -163,6 +163,83 @@ func TestImportRejectsDuplicates(t *testing.T) {
 	}
 }
 
+// testAmbiguousManager builds a registry with two providers that share a
+// volume-ID pattern (mirroring windows10/windows11 both matching
+// "CCCOMA_X64FRE*"), where only the more specific one lists an extra
+// marker file — analogous to windows11's sources/appraiserres.dll.
+func testAmbiguousManager(t *testing.T) *Manager {
+	t.Helper()
+	sqlDB, err := db.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { sqlDB.Close() })
+	if err := db.Migrate(sqlDB); err != nil {
+		t.Fatal(err)
+	}
+	st := store.New(sqlDB)
+
+	providersDir := t.TempDir()
+	writeProvider(t, providersDir, "generic-win", `
+name: generic-win
+display_name: "Generic Windows"
+family: windows
+capabilities: {iso: true, pxe: true}
+answer_file: {format: autounattend.xml}
+detection:
+  volume_id_patterns: ["CCCOMA_X64FRE*"]
+  files: ["sources/install.wim", "sources/boot.wim"]
+`)
+	writeProvider(t, providersDir, "specific-win", `
+name: specific-win
+display_name: "Specific Windows"
+family: windows
+capabilities: {iso: true, pxe: true}
+answer_file: {format: autounattend.xml}
+detection:
+  volume_id_patterns: ["CCCOMA_X64FRE*"]
+  files: ["sources/install.wim", "sources/boot.wim", "sources/appraiserres.dll"]
+`)
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	registry, err := provider.LoadDir(providersDir, log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return NewManager(log, t.TempDir(), st, registry)
+}
+
+func TestImportPrefersMoreSpecificProviderOnAmbiguousVolumeID(t *testing.T) {
+	m := testAmbiguousManager(t)
+	data := makeISO(t, "CCCOMA_X64FRE_EN-US_DV9", map[string]string{
+		"sources/install.wim":      "wim",
+		"sources/boot.wim":         "wim",
+		"sources/appraiserres.dll": "dll",
+	})
+	img, err := m.Import("win.iso", bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("Import: %v", err)
+	}
+	if img.Provider != "specific-win" {
+		t.Errorf("provider = %q, want specific-win", img.Provider)
+	}
+}
+
+func TestImportFallsBackWhenNoCandidateIsMoreSpecific(t *testing.T) {
+	m := testAmbiguousManager(t)
+	// No appraiserres.dll: neither candidate's file list fully matches
+	// (both still require sources/install.wim + sources/boot.wim, which
+	// this image also doesn't have) — falls back to the first registry
+	// match, same as before the specificity tie-break existed.
+	data := makeISO(t, "CCCOMA_X64FRE_EN-US_DV9", map[string]string{"README": "hi"})
+	img, err := m.Import("win-ambiguous.iso", bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("Import: %v", err)
+	}
+	if img.Provider != "generic-win" {
+		t.Errorf("provider = %q, want generic-win (first registry match, alphabetically before specific-win)", img.Provider)
+	}
+}
+
 func TestScanDirIndexesExistingFiles(t *testing.T) {
 	m, _ := testManager(t)
 	data := makeISO(t, "Debian 13 scan", nil)

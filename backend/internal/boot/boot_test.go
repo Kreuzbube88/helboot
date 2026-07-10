@@ -301,3 +301,115 @@ func TestISOFileServedWithRanges(t *testing.T) {
 		t.Errorf("range request: status = %d, want 206", resp.StatusCode)
 	}
 }
+
+const testWimbootManifest = `
+name: windows11
+display_name: "Windows 11"
+family: windows
+capabilities: {iso: true, pxe: true}
+answer_file:
+  format: autounattend.xml
+  template: templates/autounattend.xml.tmpl
+detection:
+  volume_id_patterns: ["CCCOMA_X64FRE*"]
+boot:
+  pxe:
+    kernel: wimboot
+    initrd:
+      - "boot/bcd=BCD"
+      - "sources/boot.wim"
+`
+
+// TestInstallScriptWimbootInitrd covers the wimboot boot chain: a bare
+// kernel name resolves against /boot/assets/, and an initrd entry with a
+// "source=localname" suffix is rendered as a two-argument iPXE "initrd"
+// line so wimboot sees the file under the exact name it requires (e.g.
+// "BCD", regardless of the path/case inside the ISO).
+func TestInstallScriptWimbootInitrd(t *testing.T) {
+	sqlDB, err := db.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { sqlDB.Close() })
+	if err := db.Migrate(sqlDB); err != nil {
+		t.Fatal(err)
+	}
+	st := store.New(sqlDB)
+
+	providersDir := t.TempDir()
+	pdir := filepath.Join(providersDir, "windows11")
+	if err := os.MkdirAll(filepath.Join(pdir, "templates"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(pdir, "provider.yaml"), []byte(testWimbootManifest), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(pdir, "templates", "autounattend.xml.tmpl"), []byte("<unattend/>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	registry, err := provider.LoadDir(providersDir, log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	isos := iso.NewManager(log, t.TempDir(), st, registry)
+	h := New(log, st, registry, isos, t.TempDir(), providersDir)
+	ts := testServer(t, h)
+
+	w, err := iso9660.NewWriter()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Cleanup()
+	for path, content := range map[string]string{
+		"boot/bcd":         "fake-bcd-bytes",
+		"sources/boot.wim": "fake-wim-bytes",
+	} {
+		if err := w.AddFile(strings.NewReader(content), path); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var buf bytes.Buffer
+	if err := w.WriteTo(&buf, "CCCOMA_X64FRE_EN-US_DV9"); err != nil {
+		t.Fatal(err)
+	}
+
+	img, err := isos.Import("win11.iso", bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if img.Provider != "windows11" {
+		t.Fatalf("iso provider = %q, want windows11", img.Provider)
+	}
+	profile, err := st.CreateProfile("Win11 Test", "windows11", &img.ID, `{}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	host, err := st.CreateHost(model.Host{
+		MAC: "aa:bb:cc:dd:ee:30", Hostname: "node30",
+		ProfileID: &profile.ID, Status: model.HostReady,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	version, err := st.ProfileVersionNumber(profile.ID, profile.CurrentVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.CreateInstallation(host.ID, version.ID, "win11-token"); err != nil {
+		t.Fatal(err)
+	}
+
+	_, script := get(t, ts, "/boot/ipxe?mac="+host.MAC)
+	for _, want := range []string{
+		"kernel " + ts.URL + "/boot/assets/wimboot",
+		"initrd " + ts.URL + "/boot/iso/1/boot/bcd BCD",
+		"initrd " + ts.URL + "/boot/iso/1/sources/boot.wim\n",
+		"boot",
+	} {
+		if !strings.Contains(script, want) {
+			t.Errorf("script missing %q:\n%s", want, script)
+		}
+	}
+}

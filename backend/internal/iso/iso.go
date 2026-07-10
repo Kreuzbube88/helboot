@@ -198,18 +198,36 @@ func (m *Manager) analyze(path string) (*analysis, error) {
 	return result, nil
 }
 
-// match returns the first provider whose detection rules fit the image.
+// match returns the provider whose detection rules fit the image.
 // Volume-ID patterns are checked first: they are cheap and also work for
 // Windows ISOs, whose file tree lives in UDF/Joliet namespaces the plain
 // ISO 9660 reader cannot fully resolve. File rules require every listed
 // file to exist.
+//
+// Some providers share a volume-ID pattern (e.g. Windows 10 and 11 both
+// use "CCCOMA_X64FRE*" on Microsoft's media): when more than one
+// provider's pattern matches, the tie is broken by file-list specificity
+// (Detection.Files) rather than by picking the first match arbitrarily.
 func (m *Manager) match(img *iso9660.Image, volumeID string) *provider.Manifest {
+	var candidates []*provider.Manifest
 	for _, manifest := range m.registry.All() {
 		for _, pattern := range manifest.Detection.VolumeIDPatterns {
 			if ok, err := path.Match(pattern, volumeID); err == nil && ok {
-				return manifest
+				candidates = append(candidates, manifest)
+				break
 			}
 		}
+	}
+	switch len(candidates) {
+	case 0:
+		// fall through to the file-only rules below
+	case 1:
+		return candidates[0]
+	default:
+		if best := mostSpecificFileMatch(img, candidates); best != nil {
+			return best
+		}
+		return candidates[0] // ambiguous: preserve prior first-match behavior
 	}
 	for _, manifest := range m.registry.All() {
 		files := manifest.Detection.Files
@@ -228,6 +246,30 @@ func (m *Manager) match(img *iso9660.Image, volumeID string) *provider.Manifest 
 		}
 	}
 	return nil
+}
+
+// mostSpecificFileMatch returns the candidate whose Detection.Files all
+// exist in the image and which declares the most files (the most
+// specific match), or nil if no candidate's file list fully matches.
+func mostSpecificFileMatch(img *iso9660.Image, candidates []*provider.Manifest) *provider.Manifest {
+	var best *provider.Manifest
+	for _, c := range candidates {
+		files := c.Detection.Files
+		if len(files) == 0 {
+			continue
+		}
+		all := true
+		for _, file := range files {
+			if !fileExists(img, file) {
+				all = false
+				break
+			}
+		}
+		if all && (best == nil || len(files) > len(best.Detection.Files)) {
+			best = c
+		}
+	}
+	return best
 }
 
 // detectBootloader classifies the boot layout from well-known paths.

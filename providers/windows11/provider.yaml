@@ -63,13 +63,24 @@ settings_schema:
     help: "Disables the TPM 2.0 / Secure Boot / RAM checks for lab hardware."
 detection:
   volume_id_patterns: ["CCCOMA_X64FRE*", "CPBA_X64FRE*"]
-  files: ["sources/install.wim", "sources/boot.wim"]
+  # appraiserres.dll is the Windows 11 setup hardware/TPM compatibility
+  # check DLL; it distinguishes Win11 media from Win10 media that share
+  # the same CCCOMA_X64FRE* volume label.
+  files: ["sources/install.wim", "sources/boot.wim", "sources/appraiserres.dll"]
 boot:
   pxe:
     kernel: wimboot
+    initrd:
+      - "boot/bcd=BCD"
+      - "boot/boot.sdi"
+      - "sources/boot.wim"
     requires: [winpe]
   http_boot:
     kernel: wimboot
+    initrd:
+      - "boot/bcd=BCD"
+      - "boot/boot.sdi"
+      - "sources/boot.wim"
     requires: [winpe]
 notes: >
   TPM 2.0 / Secure Boot / RAM hardware checks can be bypassed for lab

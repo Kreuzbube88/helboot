@@ -67,9 +67,17 @@ detection:
 boot:
   pxe:
     kernel: wimboot
+    initrd:
+      - "boot/bcd=BCD"
+      - "boot/boot.sdi"
+      - "sources/boot.wim"
     requires: [winpe]
   http_boot:
     kernel: wimboot
+    initrd:
+      - "boot/bcd=BCD"
+      - "boot/boot.sdi"
+      - "sources/boot.wim"
     requires: [winpe]
 notes: >
   Network installation boots WinPE (from the ISO's boot.wim) via wimboot,

@@ -95,7 +95,18 @@ func (h *Handler) installScript(baseURL string, ic *installContext) string {
 	fmt.Fprintf(&b, "echo HELBOOT: installing %s on %s\n", ic.profile.Name, ic.host.MAC)
 	fmt.Fprintf(&b, "kernel %s %s\n", resolve(bootCfg.Kernel), strings.TrimSpace(string(cmdline)))
 	for _, initrd := range bootCfg.Initrd {
-		fmt.Fprintf(&b, "initrd %s\n", resolve(initrd))
+		// "source=localname" exposes an ISO file under a different local
+		// name (e.g. wimboot requires the boot configuration file to be
+		// named exactly "BCD", regardless of its path/case in the ISO).
+		src, name := initrd, ""
+		if i := strings.LastIndex(initrd, "="); i >= 0 {
+			src, name = initrd[:i], initrd[i+1:]
+		}
+		if name != "" {
+			fmt.Fprintf(&b, "initrd %s %s\n", resolve(src), name)
+		} else {
+			fmt.Fprintf(&b, "initrd %s\n", resolve(src))
+		}
 	}
 	b.WriteString("boot\n")
 	return b.String()

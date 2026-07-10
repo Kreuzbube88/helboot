@@ -24,11 +24,12 @@ RUN CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w -X main.version=${VERSION}" \
     -o /helboot ./cmd/helboot
 
-# Stage 3: fetch the iPXE bootstrap binaries served via TFTP (ADR-0011).
+# Stage 3: fetch boot assets — iPXE bootstrap binaries served via TFTP,
+# plus HTTP-only assets like wimboot (ADR-0011).
 FROM alpine:3.24 AS ipxe
 RUN apk add --no-cache curl
 COPY deploy/scripts/fetch-ipxe.sh /fetch-ipxe.sh
-RUN sh /fetch-ipxe.sh /ipxe
+RUN sh /fetch-ipxe.sh /assets
 
 # Stage 4: minimal runtime image.
 FROM alpine:3.24
@@ -36,9 +37,11 @@ RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -S helboot && adduser -S -G helboot helboot
 COPY --from=backend /helboot /usr/local/bin/helboot
 COPY providers/ /app/providers/
-# Seed iPXE binaries; the entrypoint copies them into the data volume's
-# assets/tftp directory on first start if missing.
-COPY --from=ipxe /ipxe/ /app/seed/tftp/
+# Seed boot assets; the entrypoint copies them into the data volume's
+# assets/tftp (TFTP binaries) and assets/ root (HTTP-only, e.g. wimboot)
+# directories on first start if missing.
+COPY --from=ipxe /assets/tftp/ /app/seed/tftp/
+COPY --from=ipxe /assets/http/ /app/seed/assets/
 COPY deploy/docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
