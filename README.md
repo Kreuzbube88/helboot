@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-early%20development-yellow" alt="Status">
+  <img src="https://img.shields.io/github/v/tag/Kreuzbube88/helboot?label=release&color=brightgreen" alt="Latest release">
   <img src="https://img.shields.io/badge/go-%3E%3D1.25-00ADD8" alt="Go">
   <img src="https://img.shields.io/github/license/Kreuzbube88/helboot" alt="License">
   <img src="https://img.shields.io/badge/platform-Docker%20%7C%20Unraid-2496ED" alt="Platform">
@@ -22,14 +22,16 @@ PXE is just one boot method. The architecture is built to grow: iPXE,
 HTTP boot, USB boot images, VM provisioning, cloud-init, Redfish and IPMI
 are all part of the roadmap.
 
-> 🚧 **Status:** Early development, moving fast. Implemented so far: the
-> full network boot chain (ProxyDHCP/DHCP, TFTP, iPXE scripts, answer
-> files), ISO management with automatic OS detection, the installation
-> queue, host discovery, user management with roles, backup/restore,
-> a log viewer and USB/CD boot media — all behind a bilingual (en/de)
-> web UI. Not yet hardened for production use; field testing of the
-> boot chain against real hardware is ongoing. See
-> [ARCHITECTURE.md](docs/ARCHITECTURE.md) and the [ADRs](docs/adr/).
+> ✅ **Status:** **v1.0.0 is live** — image published on GHCR
+> (`:latest` / `:1.0.0`). Implemented: the full network boot chain
+> (ProxyDHCP/DHCP, TFTP, iPXE scripts, answer files), ISO management
+> with automatic OS detection, the installation queue, host discovery,
+> user management with roles, backup/restore, a log viewer and USB/CD
+> boot media — all behind a bilingual (en/de) web UI. Still a young
+> project; see [SECURITY.md](SECURITY.md) for the threat model,
+> [CHANGELOG.md](CHANGELOG.md) for release notes, and
+> [ARCHITECTURE.md](docs/ARCHITECTURE.md) / the [ADRs](docs/adr/) for
+> the design.
 
 ---
 
@@ -71,7 +73,7 @@ you.
 
 ---
 
-## Supported operating systems (v1 targets)
+## Supported operating systems
 
 - **Windows:** 10, 11, Server 2022, Server 2025
 - **Linux:** Debian, Ubuntu, Fedora, openSUSE
@@ -119,6 +121,10 @@ docker run -d \
   ghcr.io/kreuzbube88/helboot:latest
 ```
 
+Pin an explicit version instead of `:latest` (e.g. `:1.0.0`) if you
+prefer controlled, deliberate upgrades — see
+[CHANGELOG.md](CHANGELOG.md) for what changed between releases.
+
 On first start, the web UI walks you through a setup wizard: language,
 admin account, network mode, storage locations, and optionally your first
 ISO and profile.
@@ -139,6 +145,7 @@ behind each choice.
 
 ## Documentation
 
+- [Changelog](CHANGELOG.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [API](docs/API.md)
